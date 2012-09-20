@@ -26,6 +26,8 @@ public abstract class SPKSegment extends DAFSegment {
         return new SPK03Segment(Ls);
       case 9:
         return new SPK09Segment(Ls);
+      case 10:
+        return new SPK10Segment(Ls);
       case 13:
         return new SPK13Segment(Ls);
       case 15:
