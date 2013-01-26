@@ -31,39 +31,39 @@ public class PorkchopModel {
   private double departWeight,arriveWeight;
   
   public PorkchopModel() {
-    uis=new HashSet<PorkchopUI>();
+    uis=new HashSet<>();
     departHp=185000;
     arriveHp=185000;
   }
-  public void setDepartPlanet(int idx) {
+  public void setDepartPlanet(Object notify, int idx) {
     departPlanet=Planet.Planets[idx];
     departEph=KeplerPolyEphemeris.Planets[idx];
     notifyDepartPlanet();
-    calcLaunchWindow();
+    if(enable) calcLaunchWindow();
   }
   public void setArrivePlanet(int idx) {
     arrivePlanet=Planet.Planets[idx];
     arriveEph=KeplerPolyEphemeris.Planets[idx];
     notifyArrivePlanet();
-    calcLaunchWindow();
+    if(enable) calcLaunchWindow();
   }
   public void setLaunchWindow(int LlaunchWindow) {
     launchWindow=LlaunchWindow;
-    calcLaunchWindow();
+    if(enable) calcLaunchWindow();
   }
   public void setTransferType(int LtransferType) {
     transferType=LtransferType;
-    calcCourse();
+    if(enable) calcCourse();
   }
   public void setDepartTime(Time T) {
     departTime=new Time(T);
     notifyDepartTime();
-    calcCourse();
+    if(enable) calcCourse();
   }
   public void setArriveTime(Time T) {
     arriveTime=new Time(T);
     notifyArriveTime();
-    calcCourse();
+    if(enable) calcCourse();
   }
   public void setConstrainDepart(boolean LconstrainDepart) {
     constrainDepart=LconstrainDepart;
@@ -234,6 +234,8 @@ public class PorkchopModel {
   public void notifyConstraint() {
     for(PorkchopUI v:uis) v.updateConstrain(constrainDepart,constrainArrive);    
   }
+  private boolean enable=true;
+  public void enableCalc(boolean Lenable) {enable=Lenable;}
   public static void main(String[] args) {
     PorkchopUI V=new BlankPorkchopUI() {
       Planet departPlanet;
@@ -247,7 +249,7 @@ public class PorkchopModel {
         System.out.println("Out:  "+result.getOut()+"m/s");
         System.out.println("ChPl: "+result.getChPl()+"m/s");
       }
-      public void updateDepartPlanet(Planet LdepartPlanet) {
+      public void updateDepartPlanet(Object notify, Planet LdepartPlanet) {
         departPlanet=LdepartPlanet;
         System.out.println(departPlanet.toString());
       }
@@ -255,10 +257,10 @@ public class PorkchopModel {
     PorkchopModel M=new PorkchopModel();
     V.setModel(M);
     M.addView(V);
-    M.setDepartPlanet(3);
-    M.setArrivePlanet(2);
-    M.setLaunchWindow(54);
-    M.setDepartTime(new Time(82709.6,TimeUnits.Days,TimeScale.UTC,TimeEpoch.MJD));
+    M.setDepartPlanet(null,3);
+    M.setArrivePlanet(4);
+    M.setLaunchWindow(6);
+    M.setDepartTime(new Time(2013,11,18,13,43,0,0,TimeUnits.Days,TimeScale.EST,TimeEpoch.MJD));
     M.constrainDepart=true;
     M.setDepartWeight(1);
     M.setArriveWeight(0);

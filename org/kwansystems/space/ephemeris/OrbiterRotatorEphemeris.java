@@ -25,7 +25,7 @@ public class OrbiterRotatorEphemeris extends RotatorEphemeris {
   private double omega_0;
   private MathMatrix R_A;
   public OrbiterRotatorEphemeris(double Ltheta, double Lphi, double LT, double Lomega_0, Frame Lfrom) {
-    super(Lfrom,J2000Ecl);
+    super(Lfrom,J2000Equ);
     theta=Ltheta;
     phi=Lphi;
     T=LT;
@@ -33,10 +33,10 @@ public class OrbiterRotatorEphemeris extends RotatorEphemeris {
     calcR_A();
   }
   private void calcR_A() {
-    R_A=MathMatrix.mul(Constants.J2000Equ2Ecl.T(), MathMatrix.mul(MathMatrix.Rot3(-theta), MathMatrix.Rot1(phi)));
+    R_A=MathMatrix.mul(MathMatrix.Rot3(-theta), MathMatrix.Rot1(phi));
   }
   public OrbiterRotatorEphemeris(String infn, Frame Lfrom) {
-    super(Lfrom,J2000Ecl);
+    super(Lfrom,J2000Equ);
     IniFile I;
     try {
       I=new IniFile(infn);

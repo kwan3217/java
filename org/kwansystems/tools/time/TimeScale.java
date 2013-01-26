@@ -37,13 +37,13 @@ public enum TimeScale {
       return -DeltaGPS2(Tgps);
     }
   },
-  JST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+9*3600*M;}},
-  PHT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+8*3600*M;}},
-  CET() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+1*3600*M;}},
-  CEST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+2*3600*M;}},
-  MSK() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+3*3600*M;}},
-  MSD() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+4*3600*M;}},
-  EDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-4*3600*M;}},
+  JST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+9*3600*M;}},  //Japan Stadard time, 9 hours ahead of UTC (year round)
+  PHT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+8*3600*M;}},  //Philippine Time, 8 hours ahead of UTC (year round)
+  CET() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+1*3600*M;}},  //Central European Time, 1 hour ahead of UTC (winter)
+  CEST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+2*3600*M;}}, //Central European Summer Time, 2 hours ahead of UTC (summer)
+  MSK() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+3*3600*M;}},  //Moscow Standard Time, 3 hours ahead of UTC (winter)
+  MSD() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+4*3600*M;}},  //Moscow Summer Time, 4 hours ahead of UTC (summer)
+  EDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-4*3600*M;}},  //Eastern daylight time, 4 hours behind UTC (summer)
   EST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-5*3600*M;}},
   CDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-5*3600*M;}},
   CST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-6*3600*M;}},
@@ -162,17 +162,17 @@ public enum TimeScale {
    *    but is not directly related to Earth's rotation (local time) either.
    * </blockquote>
    * <p>
-	 * There are all sorts of discussions, dissensions, contentions, and confusions
+   * There are all sorts of discussions, dissensions, contentions, and confusions
    * about what TDB really means, and what time scales the ephemerides are in,
-	 * but for a practical matter, TDT is the only physically realizable dynamic time
+   * but for a practical matter, TDT is the only physically realizable dynamic time
    * scale, since it is based on TAI. All significant observations are ultimately based on the VLBI
-	 * catalogs which are solidly based in geoid atomic clock measurements, so even if
+   * catalogs which are solidly based in geoid atomic clock measurements, so even if
    * it is mathematically convenient to run an integration in TDB, TDB is really just
-	 * reduced TDT since there is no clock at the barycenter which keeps TDB.
+   * reduced TDT since there is no clock at the barycenter which keeps TDB.
    * <a href="http://www.ucolick.org/~sla/leapsecs/timescales.html">More info on time
-	 * scales</a>
+   * scales</a>
    * <p>
-	 * So: By TDB I mean the timescale any particular ephemeris uses. In practical fact, TDB is based on
+   * So: By TDB I mean the timescale any particular ephemeris uses. In practical fact, TDB is based on
    * a simplified formula from the Explanatory Supplement. This matches T<sub><i>eph</i></sub> in the 
    * JPL DE405 integrated ephemeris to within a microsecond, and so is close enough for our purposes.
    */
@@ -195,7 +195,7 @@ public enum TimeScale {
    * Table for calculating DeltaAT (TAI=UTC+DeltaAT)
    * DeltaAT=Offset+(MJD-EpochMJD)*Rate
    * Data from ftp://maia.usno.navy.mil/ser7/tai-utc.dat
-   * Current up to 1 Jan 2009
+   * Current up to 1 Jul 2012
    */
   public static final double[][] DeltaATTable={
     //StartJD     Offset      EpochMJD  Rate        StartDate   EpochDate
@@ -236,7 +236,8 @@ public enum TimeScale {
     {2450630.5,31.0      ,  41317.0,  0.0     },  //1 Jul 1997
     {2451179.5,32.0      ,  41317.0,  0.0     },  //1 Jan 1999
     {2453736.5,33.0      ,  41317.0,  0.0     },  //1 Jan 2006
-    {2454832.5,34.0      ,  41317.0,  0.0     }   //1 Jan 2009
+    {2454832.5,34.0      ,  41317.0,  0.0     },  //1 Jan 2009
+    {2456109.5,35.0      ,  41317.0,  0.0     }   //1 Jul 2012
   };
   public static long DeltaAT(long Tgps) {
     double JD=TimeEpoch.GPS2JD(Tgps);

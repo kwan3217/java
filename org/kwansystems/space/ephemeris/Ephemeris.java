@@ -41,14 +41,10 @@ public static double[] satRadius;
 public abstract class Ephemeris  {
   private Ephemeris Reference;
   private MathState CacheState;
-  private long CacheTime;
-  private MathState relCacheState;
-  private long relCacheTime;
   private double DeltaT;
   protected RotatorEphemeris NaturalToFK5;
   public Ephemeris(Ephemeris LReference) {
     Reference=LReference;
-    CacheTime=0;
     DeltaT=1.0;
   }
   public Ephemeris() {
@@ -64,31 +60,14 @@ public abstract class Ephemeris  {
     if(NaturalToFK5!=null) {
       CacheState=NaturalToFK5.CalcRotation(T).transform(CacheState);
     }
-    if(Reference!=null) {
-      CacheState=new MathState(MathVector.add(CacheState,Reference.getState(T)));
-    }
   }
   private void UpdateCache(Time T) {
-  relUpdateCache(T);
-    if(T.getTime()!=CacheTime) {
       CacheState=CalcState(T);
-      CacheTime=T.getTime();
       ReferCacheState(T);
-    }
-  }
-  private void relUpdateCache(Time T) {
-    if(T.getTime()!=relCacheTime) {
-      relCacheState=CalcState(T);
-      relCacheTime=T.getTime();
-    }
   }
   public MathState getState(Time T) {
     UpdateCache(T);
     return CacheState;
-  }
-  public MathState relGetState(Time T) {
-    relUpdateCache(T);
-    return relCacheState;
   }
   public MathStateTime getStateTime(Time T) {
     return new MathStateTime(getState(T),T);
@@ -220,8 +199,8 @@ public abstract class Ephemeris  {
     out.println("");
     out.println(" Computations by ...");
     out.println("     "+this.getClass().getName()+" Java Ephemeris Calculator");
-    out.println("     1995 E Coalton Rd #45-102, Kwan Astrodynamics (A division of Kwan Systems)");
-    out.println("     Superior, CO 80027  USA");
+    out.println("     1901 Red Cloud Rd, Kwan Astrodynamics (A division of Kwan Systems)");
+    out.println("     Longmont, CO 80504  USA");
     out.println("     Information: http://www.kwansystems.org/astro/");
     out.println("     Author     : chrisj@kwansystems.org");
     out.println("*******************************************************************************  ");

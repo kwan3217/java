@@ -97,11 +97,12 @@ import static java.lang.Math.*;
  */
 public class Time implements Serializable, Comparable<Time>, Cloneable {
   private static final long serialVersionUID = -7691401018296279480L;
-
+  public static boolean TimeDebug=true;
   /** Count of microseconds since the GPS epoch. This is the core of the time object, 
-   * all else surrounding it is just to help interpret it. Range is +/-2^63usec, ~2^53s, 
-   * approximately +/-2.8 billion years. Microsecond precision throughout. Doesn't go back
-   * to the Big Bang, but I don't really believe in that anyway.
+   * all else surrounding it is just to help interpret it. Range is +/-2^63usec, ~2^43s, 
+   * approximately +/-292000 years, microsecond precision throughout. Covers historical
+   * time just fine, it doesn't make sense to talk about times in the jurassic period to
+   * microsecond precision
    * <blockquote>
    * <i>"Is it not a strange fate that we should suffer so much fear and doubt for so
    * small a thing? So small a thing!"</i> 
@@ -110,6 +111,7 @@ public class Time implements Serializable, Comparable<Time>, Cloneable {
    * </blockquote>
    */
   private long Tgps;
+  public long getTgps() {return Tgps;}
   /**
    * Time Units of this Time object
    */
@@ -222,7 +224,7 @@ public class Time implements Serializable, Comparable<Time>, Cloneable {
     long LTgps=0*24+h; //To hours, then add hours
     LTgps=60*LTgps+n; //To minutes, then add minutes
     LTgps=60*LTgps+s; //To seconds, then add seconds
-    LTgps= M*LTgps+u; //To seconds, then add microseconds
+    LTgps= M*LTgps+u; //To microseconds, then add microseconds
     return LTgps;
   }
   public static int[] usec2hnsu(long usec) {
@@ -515,7 +517,8 @@ public class Time implements Serializable, Comparable<Time>, Cloneable {
     );
   }
   public String toString() {
-    return Units.Format.format(get())+" "+Units.toString()+" "+Epoch+" "+Scale+" ("+toDateString()+Scale+")";
+    if(TimeDebug) return Units.Format.format(get())+" "+Units.toString()+" "+Epoch+" "+Scale+" ("+toDateString()+Scale+") ["+String.format("%18d", Tgps)+"]";
+                  return Units.Format.format(get())+" "+Units.toString()+" "+Epoch+" "+Scale+" ("+toDateString()+Scale+")";
   }
   public String toStringHorizons() {
     DecimalFormat FormatSeconds=new DecimalFormat("0.000000000");

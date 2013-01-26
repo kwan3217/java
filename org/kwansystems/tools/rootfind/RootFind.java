@@ -88,7 +88,7 @@ public abstract class RootFind {
     Yt=LYt;
     try {
       init(LXlo,LXhi);
-      int IterLimit=100;
+      int IterLimit=200;
       int iters=0;
       if(verbose)System.out.println(PrintState());
       

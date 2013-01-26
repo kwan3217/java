@@ -104,7 +104,7 @@ private void btnZoomInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
       G.setColor(traj[i].color);
       int OldX=((int)(CenterX+traj[i].Start.S.X()/MPerPix));
       int OldY=((int)(CenterY-traj[i].Start.S.Y()/MPerPix));
-      try {
+ //     try {
         double diff=Time.difference(traj[i].Start.T,traj[i].Stop,traj[i].Start.T.Units);
         for(double j=traj[i].DeltaT;j<diff;j+=traj[i].DeltaT) {
           MathState ThisState=K.propagate(traj[i].Start,Time.add(traj[i].Start.T,j,traj[i].Start.T.Units));
@@ -116,7 +116,7 @@ private void btnZoomInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
             OldY=NewY;
           }
         }
-      } catch (ArithmeticException E) {System.err.println("Can't draw trajectory "+i);}
+ //     } catch (ArithmeticException E) {System.err.println("Can't draw trajectory "+i);}
     }
   }
   public void setMPerPix(double mPerPix) {
@@ -151,7 +151,7 @@ private void btnZoomInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         PorkchopModel model=new PorkchopModel();
-        model.setDepartPlanet(3);
+        model.setDepartPlanet(3); 
         model.setArrivePlanet(2);
         model.setLaunchWindow(54);
         model.setDepartTime(new Time(82709.6,TimeUnits.Days,TimeScale.UTC,TimeEpoch.MJD));

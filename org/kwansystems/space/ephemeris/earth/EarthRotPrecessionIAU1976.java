@@ -30,7 +30,7 @@ public class EarthRotPrecessionIAU1976 extends RotatorEphemeris {
   public EarthRotPrecessionIAU1976(Frame Lfrom, Frame Lto) {
     super(Lfrom,Lto);
     naturalFrom=MOD;
-    naturalTo=J2000Ecl;
+    naturalTo=J2000Equ;
     setInv(Lfrom,Lto);
   }
   // Data from Explanatory Supplement p104
@@ -123,7 +123,7 @@ public class EarthRotPrecessionIAU1976 extends RotatorEphemeris {
    * @param args
    */
   public static void main(String[] args) {
-    EarthRotPrecessionIAU1976 P=new EarthRotPrecessionIAU1976(MOD,J2000Ecl);
+    EarthRotPrecessionIAU1976 P=new EarthRotPrecessionIAU1976(MOD,J2000Equ);
     EarthRotNutationIAU1980 N=new EarthRotNutationIAU1980(TOD,MOD);
     System.out.println("Check precession against Explanatory Supplement p174");
     Time T1984=new Time(1984,1,1, 0,0,0,0,TimeUnits.Centuries,TimeScale.TDT,TimeEpoch.J2000);
