@@ -39,8 +39,11 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="panRight" min="-2" max="-2" attributes="0"/>
-                  <Component id="kOrbitCanvas1" pref="406" max="32767" attributes="0"/>
+                  <Group type="102" attributes="0">
+                      <Component id="panRight" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                  </Group>
+                  <Component id="kOrbitCanvas1" pref="434" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="panBottom" min="-2" max="-2" attributes="0"/>
@@ -371,15 +374,17 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
                           <Component id="lblTransferType" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="lblLaunchWindow" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblTransferType1" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="spnLaunchWindow" min="-2" pref="235" max="-2" attributes="0"/>
-                          <Component id="spnTransferType" min="-2" pref="235" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="spnLaunchWindow" pref="235" max="32767" attributes="0"/>
+                          <Component id="spnTransferType" pref="235" max="32767" attributes="0"/>
+                          <Component id="cboMission" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace pref="281" max="32767" attributes="0"/>
                   </Group>
@@ -396,6 +401,11 @@
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="lblTransferType" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="spnTransferType" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="cboMission" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblTransferType1" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="32767" attributes="0"/>
                   </Group>
@@ -428,6 +438,28 @@
                 <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="spnTransferTypeStateChanged"/>
               </Events>
             </Component>
+            <Component class="javax.swing.JComboBox" name="cboMission">
+              <Properties>
+                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                  <StringArray count="3">
+                    <StringItem index="0" value="Mars Odyssey"/>
+                    <StringItem index="1" value="MAVEN"/>
+                    <StringItem index="2" value="Magellan"/>
+                  </StringArray>
+                </Property>
+                <Property name="selectedIndex" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="0" type="code"/>
+                </Property>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cboMissionActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblTransferType1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Real Mission"/>
+              </Properties>
+            </Component>
           </SubComponents>
         </Container>
       </SubComponents>
@@ -447,7 +479,7 @@
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="panTrans" alignment="0" pref="1027" max="32767" attributes="2"/>
+                      <Component id="panTrans" alignment="0" max="32767" attributes="2"/>
                       <Component id="panArrive" alignment="0" max="32767" attributes="1"/>
                       <Component id="panDepart" alignment="0" max="32767" attributes="1"/>
                       <Component id="panLaunch" alignment="0" max="32767" attributes="0"/>
@@ -486,7 +518,7 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="1" attributes="0">
-                      <Component id="timArriveTime" pref="589" max="32767" attributes="0"/>
+                      <Component id="timArriveTime" max="32767" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="lblProLabel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -688,7 +720,7 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="1" attributes="0">
-                      <Component id="timDepartTime" pref="589" max="32767" attributes="0"/>
+                      <Component id="timDepartTime" max="32767" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" attributes="0">
                           <Group type="102" attributes="0">
@@ -957,7 +989,7 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" max="-2" attributes="0">
+                  <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" attributes="0">
                           <Component id="lblTransAngleLabel" min="-2" max="-2" attributes="0"/>
@@ -1125,48 +1157,123 @@
                               <Component id="spnLaunchLat" alignment="0" max="32767" attributes="1"/>
                           </Group>
                       </Group>
-                      <EmptySpace pref="441" max="32767" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="lblLaunchRALabel1" alignment="1" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchDecLabel1" alignment="1" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="lblLaunchCoast" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="lblLaunchAz" alignment="0" min="-2" max="-2" attributes="1"/>
+                              </Group>
+                          </Group>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="lblLaunchRALabel2" alignment="1" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchDecLabel2" alignment="1" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="lblDepTAAsm" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="lblDepE" alignment="0" min="-2" max="-2" attributes="1"/>
+                              </Group>
+                          </Group>
+                      </Group>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Component id="lblLaunchDecLabel3" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblLaunchRALabel3" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblLaunchRALabel4" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblLaunchDecLabel4" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="lblSubAsmLat" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblSubAsmLon" min="-2" max="-2" attributes="1"/>
+                          <Component id="lblSubEjectLon" alignment="0" min="-2" max="-2" attributes="1"/>
+                          <Component id="lblSubEjectLat" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="lblDepLonLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="lblDepLon" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="lblLaunchLon" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spnLaunchLon" alignment="3" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="lblDepLatLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="lblDepLat" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="lblLaunchLat" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spnLaunchLat" alignment="3" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="lblDepRA" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="lblDepRALabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblDepLonLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblDepLon" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchLon" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spnLaunchLon" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="lblDepDec" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="lblDepDecLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblDepLatLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblDepLat" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchLat" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spnLaunchLat" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
-                          <Group type="102" alignment="0" attributes="0">
+                          <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="lblLaunchRALabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="lblLaunchRA" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchRALabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchAz" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchRALabel4" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblSubAsmLon" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="lblLaunchDecLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="lblLaunchDec" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchDecLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchCoast" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchDecLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblSubAsmLat" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="lblDepRA" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="lblDepRALabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="lblDepDec" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="lblDepDecLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="lblLaunchRALabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="lblLaunchRA" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="lblLaunchDecLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="lblLaunchDec" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="lblLaunchRALabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblDepE" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchRALabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblSubEjectLon" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="lblLaunchDecLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblDepTAAsm" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblLaunchDecLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="lblSubEjectLat" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -1342,6 +1449,190 @@
                   </Border>
                 </Property>
                 <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchRALabel1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Launch azimuth (deg)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchAz">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchDecLabel1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Coast angle (deg)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchCoast">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchRALabel2">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Departure Eccentricity"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblDepE">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchDecLabel2">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Departure TA Asm"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblDepTAAsm">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblSubAsmLon">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchDecLabel3">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="SubAsm Lat (deg)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblSubAsmLat">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchRALabel3">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="SubEject Lon (deg)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblSubEjectLon">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchDecLabel4">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="SubEject Lat (deg)"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblSubEjectLat">
+              <Properties>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
+                </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Tahoma" size="11" style="1"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="4"/>
+                <Property name="text" type="java.lang.String" value="jLabel7"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+                    <LineBorder/>
+                  </Border>
+                </Property>
+                <Property name="opaque" type="boolean" value="true"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblLaunchRALabel4">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="SubAsm Lon (deg)"/>
               </Properties>
             </Component>
           </SubComponents>

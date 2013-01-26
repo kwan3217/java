@@ -16,15 +16,14 @@ public class EarthRotIAU1980 extends GraphRotatorEphemeris implements PlanetRota
     addEdge(new EarthRotGMST(PEF,TEME));
     addEdge(new EarthRotEqEquinox(TEME,TOD));
     addEdge(new EarthRotNutationIAU1980(TOD,MOD));
-    addEdge(new EarthRotPrecessionIAU1976(MOD,J2000Ecl));
-    addEdge(J2000Equ,J2000Ecl,J2000FK52Ecl);
+    addEdge(new EarthRotPrecessionIAU1976(MOD,J2000Equ));
   }
   public EarthRotIAU1980(Frame Lfrom, Frame Lto) {
       this();
       set(Lfrom,Lto);
   }
   public static void main(String args[]) {
-    EarthRotPrecessionIAU1976 P=new EarthRotPrecessionIAU1976(MOD,J2000Ecl);
+    EarthRotPrecessionIAU1976 P=new EarthRotPrecessionIAU1976(MOD,J2000Equ);
     EarthRotNutationIAU1980 N=new EarthRotNutationIAU1980(TOD,MOD);
     Time T1990=new Time(1990,1,1, 0,0,0,0,TimeUnits.Centuries,TimeScale.TDB,TimeEpoch.J2000);
     MathMatrix RTestOut1990=new MathMatrix(new double[][] {
@@ -56,7 +55,7 @@ public class EarthRotIAU1980 extends GraphRotatorEphemeris implements PlanetRota
     System.out.println(new AxisAngle(MathMatrix.mul(R1990_Chain, RTestOut1990)));
     
     ChartRecorder C=new ArrayListChartRecorder();
-    EarthRotIAU1980 ChainJ2000_PEF=new EarthRotIAU1980(J2000Ecl,PEF);
+    EarthRotIAU1980 ChainJ2000_PEF=new EarthRotIAU1980(J2000Equ,PEF);
     for(int i=0;i<365;i++) {
       Time T=Time.add(T1990, 0.5+((double)i)/1.0,TimeUnits.Days);
       MathVector R=Planet.Planets[3].Orbit.getState(T).R().opp();

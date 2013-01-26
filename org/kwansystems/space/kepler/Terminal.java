@@ -11,7 +11,7 @@ public class Terminal {
   private MathVector DV;
   private Planet P;
   private double Hp;
-  private double Vinf,C3,Pro,Out,ChPl;
+  private double Vinf,C3,Pro,Out,ChPl,E,TAAsm;
   private double Vcirc,Vesc,Vp,DVesc,DVcirc;
   @Override
   public String toString() {
@@ -23,7 +23,7 @@ public class Terminal {
     return result.toString();
   }
   public double[] CalcHyper(double Hp, double Vinf) {
-    return new double[] {DVesc,DVcirc,Vcirc,Vesc,Vp};
+    return new double[] {DVesc,DVcirc,Vcirc,Vesc,Vp,E,TAAsm};
   }    
   public Terminal(MathStateTime Lst, Planet LP, double LHp) {
     P=LP;
@@ -42,6 +42,10 @@ public class Terminal {
     Vcirc=Math.sqrt(Mu/Rad);
     Vesc =Vcirc*Math.sqrt(2.0);
     Vp=Math.hypot(Vinf,Vesc);
+    double xi=Vp*Vp/2-Mu/Rad;
+    double h=Vp*Rad;
+    E=Math.sqrt(1.0+2.0*xi*h*h/(Mu*Mu));
+    TAAsm=Math.acos(-1.0/E);
     DVesc=Vp-Vesc;
     DVcirc=Vp-Vcirc;
   }
@@ -66,6 +70,8 @@ public class Terminal {
   public double getOut() {
     return Out;
   }
+  public double getE() { return E;}
+  public double getTAAsm() {return TAAsm;}
   public MathVector getVinfVec() {
     return new MathVector(DV);
   }
