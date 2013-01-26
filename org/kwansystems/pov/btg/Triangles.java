@@ -22,6 +22,6 @@ public class Triangles extends BTGObject{
       if(P instanceof IndexTypes) I=(IndexTypes)P;
     }
     
-    for(int i=0;i<elements.length;i++)
+    for(int i=0;i<elements.length;i++);
   }
 }

@@ -8,7 +8,7 @@ public class Integrate {
   double toPhysical(Component c, int value) {
 
   }
-  const g_z=9.79;
+  public final static double g_z=9.79;
   DerivativeSet F=new DerivativeSet() {
 
     @Override

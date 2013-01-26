@@ -26,7 +26,7 @@ public class LinearKalman {
     xh=xhm.add(K.mul(yh));        //New estimate of state
     P=Pm.sub(K.mul(Gamma).mul(K.T())); //new estimate covariance
   }
-
+/*
 function kalman_velocity_step,z,dt,sigmav,sigmaz,LL,xh0,p0,state=state
   ;Matrix constants
   H=[1d,0]
@@ -56,7 +56,7 @@ function kalman_velocity_step,z,dt,sigmav,sigmaz,LL,xh0,p0,state=state
   }
 
 end
-
+*/
 /** kalman_velocity - simple driver for the Kalman fiter or smoother
  @param z measurements, in any physical or engineering unit. Should be a 1D array.
  @param t time stamp for each measurement, in some uniform time scale (such as TAI
@@ -102,6 +102,7 @@ end
 ;  You can pull the 1-sigma uncertainty off of the diagonals, but if the correlation is too
 ;  high, this isn't really very meaningful any more. sigma_x0=sqrt(p[0,0]) and sigma_x1=sqrt(p[1,1])
 */
+  /*
 double[][]function kalman_velocity,z,t,sigmav,sigmaz,LL,xh0,p0,state=state
 
   ;Matrix constants
@@ -155,4 +156,6 @@ double[][]function kalman_velocity,z,t,sigmav,sigmaz,LL,xh0,p0,state=state
     p_filt:p_filt,  $
     p_smoo:p_smoo   $
   }
+   
+   */
 }

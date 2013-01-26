@@ -5,7 +5,7 @@
 
 package org.kwansystems.rollercoasterometer;
 
-import java.awt.*;
+import java.awt.Graphics;
 import java.util.*;
 import org.kwansystems.tools.zoetrope.*;
 
@@ -17,7 +17,7 @@ public class SatPosZoetrope extends Zoetrope {
   List<List<int[]>> satData;
   public SatPosZoetrope(String LWindowTitle, int LFramePeriodMs) {
     super(LWindowTitle,LFramePeriodMs);
-    satData=new ArrayList<List<int[]>>
+    satData=new ArrayList<List<int[]>>();
   }
 
   @Override

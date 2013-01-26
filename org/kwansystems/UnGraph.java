@@ -51,7 +51,13 @@ public class UnGraph extends javax.swing.JFrame {
     URPhysX = new javax.swing.JTextField();
     URPhysY = new javax.swing.JTextField();
     jSplitPane1 = new javax.swing.JSplitPane();
-    MainGraph = new javax.swing.JPanel();
+    MainGraph = new javax.swing.JPanel()  {
+      @Override public void paintComponent(Graphics g) {
+        super.paintComponent(g);    // paints background
+        // do your drawing here
+        if(image!=null) g.drawImage(image,0,0,this);
+      }
+    };
     jPanel1 = new javax.swing.JPanel();
     jScrollPane1 = new javax.swing.JScrollPane();
     DataTable = new javax.swing.JTable();
@@ -63,6 +69,7 @@ public class UnGraph extends javax.swing.JFrame {
     UniformInterval = new javax.swing.JTextField();
     UniformThis = new javax.swing.JTextField();
     jButton2 = new javax.swing.JButton();
+    fc = new javax.swing.JFileChooser();
 
     setTitle("UnGraph");
     addWindowListener(new java.awt.event.WindowAdapter() {
@@ -659,10 +666,14 @@ public class UnGraph extends javax.swing.JFrame {
 
     private void LoadImgBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadImgBtnActionPerformed
       // Add your handling code here:
-      ImageIcon icon = new ImageIcon(ImageName);
-      Image image=icon.getImage();
-      Graphics G=MainGraph.getGraphics();
-      G.drawImage(image,0,0,this);
+      int returnVal = fc.showOpenDialog(this);  // End of variables declaration//GEN-END:variables
+      if (returnVal == JFileChooser.APPROVE_OPTION) {
+        ImageName = fc.getSelectedFile().toString();
+        //This is where a real application would open the file.
+        ImageIcon icon = new ImageIcon(ImageName);
+        image=icon.getImage();
+        MainGraph.repaint();
+      }
     }//GEN-LAST:event_LoadImgBtnActionPerformed
     
     /** Exit the Application */
@@ -678,7 +689,6 @@ public class UnGraph extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        ImageName="C:\\Users\\Jeppesen\\Desktop\\Red Diode Curve.png";//args[0];
         new UnGraph().show();
     }
     
@@ -714,6 +724,7 @@ public class UnGraph extends javax.swing.JFrame {
   private javax.swing.JPanel jPanel1;
   private javax.swing.JScrollPane jScrollPane1;
   private javax.swing.JSplitPane jSplitPane1;
-  // End of variables declaration//GEN-END:variables
-    
+  //Create a file chooser
+  private javax.swing.JFileChooser fc;
+  private Image image;
 }

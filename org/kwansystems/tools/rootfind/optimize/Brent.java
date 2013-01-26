@@ -17,12 +17,13 @@ public class Brent {
     a small number that protects against trying to achieve fractional accuracy for a minimum that
     happens to be exactly zero.*/
   //#define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
-  double brent(double ax, double bx, double cx, OptimizeFuntion f), double tol, double *xmin) {
-  /*Given a function f, and given a bracketing triplet of abscissas ax, bx, cx (such that bx is
+  /*
+  double brent(double ax, double bx, double cx, OptimizeFuntion f, double tol, double *xmin) {
+  Given a function f, and given a bracketing triplet of abscissas ax, bx, cx (such that bx is
     between ax and cx, and f(bx) is less than both f(ax) and f(cx)), this routine isolates
     the minimum to a fractional precision of about tol using Brent’s method. The abscissa of
     the minimum is returned as xmin, and the minimum function value is returned as brent, the
-    returned function value. */
+    returned function value. 
     int iter;
     double a,b,d,etemp,fu,fv,fw,fx,p,q,r,tol1,tol2,u,v,w,x,xm;
     double e=0.0; //This will be the distance moved on
@@ -90,8 +91,9 @@ public class Brent {
        }
      } //Done with housekeeping. Back for
    }   //another iteration.
-   throw new RuntimeException("Too many iterations in brent");
+    throw new RuntimeException("Too many iterations in brent");
    *xmin=x; Never get here.
    return fx;
   }
+*/
 }

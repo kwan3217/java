@@ -16,7 +16,7 @@ public class Disasm {
     return result;
   }
   SortedSet<Integer> labels=new TreeSet<Integer>();
-  int getField(byte lobyte, byte hibyte, )
+//  int getField(byte lobyte, byte hibyte, )
   public void disasm2(byte hibyte, byte lobyte) {
     switch(hibyte) {
       case (byte)0x24:

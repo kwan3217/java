@@ -143,7 +143,7 @@ public abstract class DoubleArrayFile {
       System.out.printf("Difference: %25.7f\n",horizons_resultDE405[i]-result[i]);
     }
 */
-   RandomAccessFile inf=new RandomAccessFile("C:\\Users\\jeppesen\\IDLWorkspace80\\icy\\data\\msl\\spk\\msl_spk_cruise_od013_v1-jan17-tcm123_eph-edl-landed.bsp","r");
+   RandomAccessFile inf=new RandomAccessFile("C:\\Users\\jeppesen\\IDLWorkspace80\\icy\\data\\mvn\\spk\\spk_m_141028-151029_120412.bsp","r");
  
 //    RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
 //    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
@@ -153,21 +153,19 @@ public abstract class DoubleArrayFile {
       System.out.println(comment[i]);
     }
    daf.dump(System.out);
-/*    int i=1;
+    int i=1;
     for(SummaryRecord SR:daf.sr) {
       for(Summary S:SR.summaries) {
-        //System.out.println(S);
-        SPKSegment SPKS=SPKSegment.loadSegment(S);
-        if(SPKS.target==-76 && i<=3) {
-          DAFRecord[] SPKR=SPKS.Record();
-          for(int j=0;j<SPKR.length;j++) {
-            System.out.printf("%15.6fd,",((SPKRecord)SPKR[j]).epoch());
-            if(j%5==0) System.out.println("$");
-          }
-          i++;
-        }
+        System.out.println(S);
+/*        SPKSegment SPKS=SPKSegment.loadSegment(S);
+        DAFRecord[] SPKR=SPKS.Record();
+        for(int j=0;j<SPKR.length;j++) {
+          System.out.printf("%15.6fd,",((SPKRecord)SPKR[j]).epoch());
+          if(j%5==0) System.out.println("$");
+        }*/
+        i++;
       }
-    }*/
+    }
 
   }
 }
