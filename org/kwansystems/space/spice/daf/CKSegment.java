@@ -22,6 +22,8 @@ public abstract class CKSegment extends DAFSegment {
     switch(Ls.summaryI[2]) {
       case 1:
         return new CK01Segment(Ls);
+      case 2:
+        return new CK02Segment(Ls);
       case 3:
         return new CK03Segment(Ls);
       default:
