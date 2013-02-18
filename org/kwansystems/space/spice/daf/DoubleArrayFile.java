@@ -143,7 +143,7 @@ public abstract class DoubleArrayFile {
       System.out.printf("Difference: %25.7f\n",horizons_resultDE405[i]-result[i]);
     }
 */
-   RandomAccessFile inf=new RandomAccessFile("C:\\Users\\jeppesen\\IDLWorkspace80\\icy\\data\\mvn\\ck\\mvn_iuv_all_l0_20150803_v1.bc","r");
+   RandomAccessFile inf=new RandomAccessFile("C:\\Users\\chrisj\\Downloads\\2012_DA14.bsp","r");
  
 //    RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
 //    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
