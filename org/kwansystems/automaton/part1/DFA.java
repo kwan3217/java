@@ -187,10 +187,22 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
   }
   int stepsTaken;
   public Termination RunToHalt() {
-    Termination T=Termination.Continue;
-    while(T==Termination.Continue) {
+    Termination T;
+    do {
       T=step();
-    }
+    } while(T==Termination.Continue);
+    ShowComment("Ran for "+stepsTaken+" steps.");
+    ShowComment(""+numTransitionsExercised+" of "+numTransitions+" transitions exercised");
+    ShowComment(""+numStatesExercised+" of "+numStates+" states exercised");
+    return T;
+  }
+  public Termination RunToAccept() {
+    Termination T;
+    do {
+      T=step();
+      State<AlphabetType,StateNameType> S=Delta.get(CurrentState);
+      if(S!=null && S.Accept) T=Termination.Accept;
+    } while(T==Termination.Continue);
     ShowComment("Ran for "+stepsTaken+" steps.");
     ShowComment(""+numTransitionsExercised+" of "+numTransitions+" transitions exercised");
     ShowComment(""+numStatesExercised+" of "+numStates+" states exercised");
@@ -842,6 +854,9 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
    */
   public Tape<AlphabetType> getTape() {
     return tape;
+  }
+  public void setCurrentState(StateNameType currentState) {
+    CurrentState = currentState;
   }
   /**
    * @return the currentState
