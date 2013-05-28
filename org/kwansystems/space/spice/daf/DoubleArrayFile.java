@@ -143,7 +143,7 @@ public abstract class DoubleArrayFile {
       System.out.printf("Difference: %25.7f\n",horizons_resultDE405[i]-result[i]);
     }
 */
-   RandomAccessFile inf=new RandomAccessFile("C:\\Users\\chrisj\\Downloads\\2012_DA14.bsp","r");
+   RandomAccessFile inf=new RandomAccessFile("C:\\jeppesen\\IDLWorkspace80\\IUVS-ITF-SW\\iuvs\\fakery\\mvn_iuv_fake_tag.bsp","r");
  
 //    RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
 //    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
@@ -157,12 +157,12 @@ public abstract class DoubleArrayFile {
     for(SummaryRecord SR:daf.sr) {
       for(Summary S:SR.summaries) {
         System.out.println(S);
-/*        SPKSegment SPKS=SPKSegment.loadSegment(S);
+        SPKSegment SPKS=SPKSegment.loadSegment(S);
         DAFRecord[] SPKR=SPKS.Record();
         for(int j=0;j<SPKR.length;j++) {
           System.out.printf("%15.6fd,",((SPKRecord)SPKR[j]).epoch());
           if(j%5==0) System.out.println("$");
-        }*/
+        }
         i++;
       }
     }
