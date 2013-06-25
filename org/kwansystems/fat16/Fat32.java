@@ -130,7 +130,7 @@ public class Fat32 {
     }
   }
   public static void main(String[] args) throws IOException {
-    RandomAccessFile inf=new RandomAccessFile("/home/chrisj/Videos/Fwd1.dump","r");
+    RandomAccessFile inf=new RandomAccessFile("c:\\users\\chrisj\\Desktop\\sde","r");
     Fat32 F=new Fat32(inf);
     System.out.println(F);
 //    F.dumpChains("/home/chrisj/Videos/Fwd1",F.fat1);
@@ -138,12 +138,5 @@ public class Fat32 {
 //    F.dumpToTheEnd("/home/chrisj/Videos/Fwd1",13547);
     inf.close();
 
-    inf=new RandomAccessFile("/home/chrisj/Videos/Aft1.dump","r");
-    F=new Fat32(inf);
-    System.out.println(F);
-//    F.dumpChains("/home/chrisj/Videos/Aft1",F.fat1);
-//    F.dumpChains("/home/chrisj/Videos/Aft2",F.fat2);
-//    F.dumpToTheEnd("/home/chrisj/Videos/Aft1",13575);
-    inf.close();
   }
 }
