@@ -175,10 +175,10 @@ public class Time implements Serializable, Comparable<Time>, Cloneable {
     return Tforeign;
   }
   public Time(double T, TimeUnits LUnits, TimeScale LScale, TimeEpoch LEpoch) {
-    set(ForeignToGPS(T,LUnits,LScale,LEpoch));
     Units=LUnits;
     Scale=LScale;
     Epoch=LEpoch;
+    set(T);
     SetDebugVals();
   }
   public Time(TimeUnits LUnits, TimeScale LScale, TimeEpoch LEpoch) {

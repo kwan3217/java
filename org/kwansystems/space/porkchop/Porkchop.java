@@ -1270,6 +1270,7 @@ private void spnTransferTypeStateChanged(javax.swing.event.ChangeEvent evt) {//G
     @Override public void updateCourse(Course course) {
       Terminal depart=course.ResolveDeltaVdepart(model.getDepartPlanet(),model.getDepartHp());
       Terminal arrive=course.ResolveDeltaVarrive(model.getArrivePlanet(),model.getArriveHp());
+      System.out.println(course.getElements());
       lblPrograde.setText(AutoRange.DisplayEngUnit(depart.getPro()));
       lblOutward.setText(AutoRange.DisplayEngUnit(depart.getOut()));
       lblChPlane.setText(AutoRange.DisplayEngUnit(depart.getChPl()));

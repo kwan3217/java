@@ -6,7 +6,7 @@ import java.util.*;
 
 import org.kwansystems.automaton.*;
 import org.kwansystems.automaton.part1.klex.*;
-import org.kwansystems.automaton.regexp.*;
+import org.kwansystems.automaton.part1.regexp.*;
 import org.kwansystems.automaton.tape.*;
 
 import static org.kwansystems.emulator.MiniLogo.TokenType.*;

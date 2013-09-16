@@ -185,8 +185,8 @@ public class Elements {
       N=Math.sqrt(GM/(A*A*A));
       if(verbose)System.out.println("Mean Motion n:   "+N+"rad/"+TimeUnit);
       if(verbose)System.out.println("Tp: "+(-M/N));
-      TP=Time.add(Epoch,-M/N);
-      TNextP=Time.add(TP,Period);
+      TP=Time.add(Epoch,-M/N,Seconds);
+      TNextP=Time.add(TP,Period,Seconds);
       if(verbose)System.out.println("Tp: "+TP.toString());
     } else {
       double FA=acosh((E+Math.cos(TA))/(1+E*Math.cos(TA)));
@@ -264,12 +264,12 @@ public class Elements {
   public String toString() {
     String TpS,TnpS;
     if(TP!=null) {
-       TpS="Time of Periapse            TP:  "+TP.toString()+"deg\n";
+       TpS="Time of Periapse            TP:  "+TP.toString()+"\n";
     } else {
       TpS="";
     } 	
     if(TNextP!=null & E<1) {
-      TnpS="Time of next Periapse       TnP: "+TNextP.toString()+"deg\n";
+      TnpS="Time of next Periapse       TnP: "+TNextP.toString()+"\n";
     } else {
       TnpS="";
     } 

@@ -1,5 +1,6 @@
 package org.kwansystems.space.kepler;
 
+import org.kwansystems.space.*;
 import org.kwansystems.space.planet.*;
 import org.kwansystems.tools.vector.*;
 import java.io.*;
@@ -25,6 +26,9 @@ public class Course {
   }
   public Terminal ResolveDeltaVarrive(Planet P, double LHp) {
     return new Terminal(new MathStateTime(arrive.S,arrive.T),P,LHp);
+  }
+  public Elements getElements() {
+    return new Elements(depart,Planet.Sun.S.GM,"m");
   }
   @Override
   public String toString() {
