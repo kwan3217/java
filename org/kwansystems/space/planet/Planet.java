@@ -60,7 +60,7 @@ public class Planet{
     if(S.f==0) {
       return xyz.length()-S.Re;
     }
-    return xyz2lla(xyz).Z();
+    return xyz2lla(xyz)[2];
   }
   /**
    * Acceleration of gravity, m/s^2
@@ -117,14 +117,14 @@ public class Planet{
       Coeff1*r.Z()*Coeff3
     );
   }
-  public MathVector xyz2lla(MathVector xyz) {
+  public double[] xyz2lla(MathVector xyz) {
     return S.xyz2lla(xyz);
   }
   public MathVector LocalVertical(MathVector xyz) {
     if(S.f==0) {
       return xyz.normal();
     }
-    MathVector lla=xyz2lla(xyz);
+    double[] lla=xyz2lla(xyz);
     return lla2xyz(lla).normal();
   }
   /**
@@ -132,8 +132,8 @@ public class Planet{
    * @param lla A vector of [Latitude (rad), Longitude (rad), Altitude (m)] 
    * @return Radius vector, in planet-centered inertial frame, m
    */
-  public MathVector lla2xyz(MathVector lla) {
-    return lla2xyz(lla.X(),lla.Y(),lla.Z());
+  public MathVector lla2xyz(double[] lla) {
+    return lla2xyz(lla[0],lla[1],lla[2]);
   }
   /**
    * Convert a latitude, longitude, and altitude triplet into a rectangular vector

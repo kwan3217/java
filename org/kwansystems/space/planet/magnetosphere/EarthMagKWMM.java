@@ -7,8 +7,8 @@ import static java.lang.Math.*;
  * This is intended to match WMM-2005 but use less Fortran-inspired code, as well
  * as have the coefficients embedded.
  */
-public class EarthMagKWMM2005 implements Magnetosphere {
-  public static final double[][][] WMM2005Cof=new double[][][] {
+public class EarthMagKWMM implements Magnetosphere {
+  public static final double[][][] WM2005Cof=new double[][][] {
 /*  0  0 */{{      0.0,       0.0,        0.0,        0.0}},
 /*  1  0 */{{ -29556.8,       0.0,        8.0,        0.0},
 /*  1  1 */ {  -1671.7,    5079.8,       10.6,      -20.9}},
@@ -100,11 +100,103 @@ public class EarthMagKWMM2005 implements Magnetosphere {
 /* 12 10 */ {     -0.1,      -0.9,        0.0,        0.0},
 /* 12 11 */ {     -0.3,      -0.4,        0.0,        0.0},
 /* 12 12 */ {     -0.1,       0.8,        0.0,        0.0}}};
-  public static void main(String[] args) throws IOException {
-    EarthMagKWMM2005 E=new EarthMagKWMM2005(2005);
+  public static final double[][][] WM2010Cof=new double[][][] { 
+    {{        0.0d,      0.0  ,      0.0 ,       0.0}}, //  0  0 
+    {{  -29496.6 ,      0.0  ,     11.6 ,       0.0},   //  1  0
+     {   -1586.3 ,   4944.4  ,     16.5 ,     -25.9}},  //  1  1
+    {{   -2396.6 ,      0.0  ,    -12.1 ,       0.0},   //  2  0
+     {    3026.1 ,  -2707.7  ,     -4.4 ,     -22.5},   //  2  1
+     {    1668.6 ,   -576.1  ,      1.9 ,     -11.8}},  //  2  2
+    {{    1340.1 ,      0.0  ,      0.4 ,       0.0},   //  3  0
+     {   -2326.2 ,   -160.2  ,     -4.1 ,       7.3},   //  3  1
+     {    1231.9 ,    251.9  ,     -2.9 ,      -3.9},   //  3  2
+     {     634.0 ,   -536.6  ,     -7.7 ,      -2.6}},  //  3  3
+    {{     912.6 ,      0.0  ,     -1.8 ,       0.0},   //  4  0
+     {     808.9 ,    286.4  ,      2.3 ,       1.1},   //  4  1
+     {     166.7 ,   -211.2  ,     -8.7 ,       2.7},   //  4  2
+     {    -357.1 ,    164.3  ,      4.6 ,       3.9},   //  4  3
+     {      89.4 ,   -309.1  ,     -2.1 ,      -0.8}},  //  4  4
+    {{    -230.9 ,      0.0  ,     -1.0 ,       0.0},   //  5  0
+     {     357.2 ,     44.6  ,      0.6 ,       0.4},   //  5  1
+     {     200.3 ,    188.9  ,     -1.8 ,       1.8},   //  5  2
+     {    -141.1 ,   -118.2  ,     -1.0 ,       1.2},   //  5  3
+     {    -163.0 ,      0.0  ,      0.9 ,       4.0},   //  5  4
+     {      -7.8 ,    100.9  ,      1.0 ,      -0.6}},  //  5  5
+    {{      72.8 ,      0.0  ,     -0.2 ,       0.0},   //  6  0
+     {      68.6 ,    -20.8  ,     -0.2 ,      -0.2},   //  6  1
+     {      76.0 ,     44.1  ,     -0.1 ,      -2.1},   //  6  2
+     {    -141.4 ,     61.5  ,      2.0 ,      -0.4},   //  6  3
+     {     -22.8 ,    -66.3  ,     -1.7 ,      -0.6},   //  6  4
+     {      13.2 ,      3.1  ,     -0.3 ,       0.5},   //  6  5
+     {     -77.9 ,     55.0  ,      1.7 ,       0.9}},  //  6  6
+    {{      80.5 ,      0.0  ,      0.1 ,       0.0},   //  7  0
+     {     -75.1 ,    -57.9  ,     -0.1 ,       0.7},   //  7  1
+     {      -4.7 ,    -21.1  ,     -0.6 ,       0.3},   //  7  2
+     {      45.3 ,      6.5  ,      1.3 ,      -0.1},   //  7  3
+     {      13.9 ,     24.9  ,      0.4 ,      -0.1},   //  7  4
+     {      10.4 ,      7.0  ,      0.3 ,      -0.8},   //  7  5
+     {       1.7 ,    -27.7  ,     -0.7 ,      -0.3},   //  7  6
+     {       4.9 ,     -3.3  ,      0.6 ,       0.3}},  //  7  7
+    {{      24.4 ,      0.0  ,     -0.1 ,       0.0},   //  8  0
+     {       8.1 ,     11.0  ,      0.1 ,      -0.1},   //  8  1
+     {     -14.5 ,    -20.0  ,     -0.6 ,       0.2},   //  8  2
+     {      -5.6 ,     11.9  ,      0.2 ,       0.4},   //  8  3
+     {     -19.3 ,    -17.4  ,     -0.2 ,       0.4},   //  8  4
+     {      11.5 ,     16.7  ,      0.3 ,       0.1},   //  8  5
+     {      10.9 ,      7.0  ,      0.3 ,      -0.1},   //  8  6
+     {     -14.1 ,    -10.8  ,     -0.6 ,       0.4},   //  8  7
+     {      -3.7 ,      1.7  ,      0.2 ,       0.3}},  //  8  8
+    {{       5.4 ,      0.0  ,      0.0 ,       0.0},   //  9  0
+     {       9.4 ,    -20.5  ,     -0.1 ,       0.0},   //  9  1
+     {       3.4 ,     11.5  ,      0.0 ,      -0.2},   //  9  2
+     {      -5.2 ,     12.8  ,      0.3 ,       0.0},   //  9  3
+     {       3.1 ,     -7.2  ,     -0.4 ,      -0.1},   //  9  4
+     {     -12.4 ,     -7.4  ,     -0.3 ,       0.1},   //  9  5
+     {      -0.7 ,      8.0  ,      0.1 ,       0.0},   //  9  6
+     {       8.4 ,      2.1  ,     -0.1 ,      -0.2},   //  9  7
+     {      -8.5 ,     -6.1  ,     -0.4 ,       0.3},   //  9  8
+     {     -10.1 ,      7.0  ,     -0.2 ,       0.2}},  //  9  9
+    {{      -2.0 ,      0.0  ,      0.0 ,       0.0},   // 10  0
+     {      -6.3 ,      2.8  ,      0.0 ,       0.1},   // 10  1
+     {       0.9 ,     -0.1  ,     -0.1 ,      -0.1},   // 10  2
+     {      -1.1 ,      4.7  ,      0.2 ,       0.0},   // 10  3
+     {      -0.2 ,      4.4  ,      0.0 ,      -0.1},   // 10  4
+     {       2.5 ,     -7.2  ,     -0.1 ,      -0.1},   // 10  5
+     {      -0.3 ,     -1.0  ,     -0.2 ,       0.0},   // 10  6
+     {       2.2 ,     -3.9  ,      0.0 ,      -0.1},   // 10  7
+     {       3.1 ,     -2.0  ,     -0.1 ,      -0.2},   // 10  8
+     {      -1.0 ,     -2.0  ,     -0.2 ,       0.0},   // 10  9
+     {      -2.8 ,     -8.3  ,     -0.2 ,      -0.1}},  // 10 10
+    {{       3.0 ,      0.0  ,      0.0 ,       0.0},   // 11  0
+     {      -1.5 ,      0.2  ,      0.0 ,       0.0},   // 11  1
+     {      -2.1 ,      1.7  ,      0.0 ,       0.1},   // 11  2
+     {       1.7 ,     -0.6  ,      0.1 ,       0.0},   // 11  3
+     {      -0.5 ,     -1.8  ,      0.0 ,       0.1},   // 11  4
+     {       0.5 ,      0.9  ,      0.0 ,       0.0},   // 11  5
+     {      -0.8 ,     -0.4  ,      0.0 ,       0.1},   // 11  6
+     {       0.4 ,     -2.5  ,      0.0 ,       0.0},   // 11  7
+     {       1.8 ,     -1.3  ,      0.0 ,      -0.1},   // 11  8
+     {       0.1 ,     -2.1  ,      0.0 ,      -0.1},   // 11  9
+     {       0.7 ,     -1.9  ,     -0.1 ,       0.0},   // 11 10
+     {       3.8 ,     -1.8  ,      0.0 ,      -0.1}},  // 11 11
+    {{      -2.2 ,      0.0  ,      0.0 ,       0.0},   // 12  0
+     {      -0.2 ,     -0.9  ,      0.0 ,       0.0},   // 12  1
+     {       0.3 ,      0.3  ,      0.1 ,       0.0},   // 12  2
+     {       1.0 ,      2.1  ,      0.1 ,       0.0},   // 12  3
+     {      -0.6 ,     -2.5  ,     -0.1 ,       0.0},   // 12  4
+     {       0.9 ,      0.5  ,      0.0 ,       0.0},   // 12  5
+     {      -0.1 ,      0.6  ,      0.0 ,       0.1},   // 12  6
+     {       0.5 ,      0.0  ,      0.0 ,       0.0},   // 12  7
+     {      -0.4 ,      0.1  ,      0.0 ,       0.0},   // 12  8
+     {      -0.4 ,      0.3  ,      0.0 ,       0.0},   // 12  9
+     {       0.2 ,     -0.9  ,      0.0 ,       0.0},   // 12 10
+     {      -0.8 ,     -0.2  ,     -0.1 ,       0.0},   // 12 11
+     {       0.0 ,      0.9  ,      0.1 ,       0.0}}}; // 12 12
+   public static void main(String[] args) throws IOException {
+    EarthMagKWMM E=new EarthMagKWMM(2005);
     E.testFile("Data/EarthMagWMM2005/WMM2006_TestValues.txt");
   }
-
+  private final double[][][] WMMCof;
   private int maxord;
   private final int epoch;
   private double[][] g=new double[13][];
@@ -123,10 +215,15 @@ public class EarthMagKWMM2005 implements Magnetosphere {
   private static final double a4=a2*a2;
   private static final double b4=b2*b2;
   private static final double c4=a4-b4;
-  public EarthMagKWMM2005(int Lepoch) throws IOException {
+  public EarthMagKWMM(int Lepoch) {
 /* INITIALIZE CONSTANTS */
     epoch=Lepoch;
-    maxord=WMM2005Cof.length-1;
+    if(epoch==2005) {
+      WMMCof=WM2005Cof;
+    } else {
+      WMMCof=WM2010Cof;
+    }
+    maxord=WMMCof.length-1;
     normalizeCof();
   }
   public void testFile(String infn) throws IOException {
@@ -163,7 +260,7 @@ public class EarthMagKWMM2005 implements Magnetosphere {
         System.out.printf("Calc: %9.1f  %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f\n",
               toDegrees(lat),toDegrees(lon),
               toDegrees(f[0].dec),toDegrees(f[0].dip),
-              f[0].h,f[0].x,f[0].y,f[0].z,f[0].ti
+              f[0].h,f[0].B.X(),f[0].B.Y(),f[0].B.Z(),f[0].ti
               );
         System.out.printf("File:                      %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f\n",
               toDegrees(D),toDegrees(I),
@@ -171,11 +268,11 @@ public class EarthMagKWMM2005 implements Magnetosphere {
               );
         System.out.printf("Diff:                      %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f\n",
               toDegrees(f[0].dec-D),toDegrees(f[0].dip-I),
-              f[0].h-H,f[0].x-X,f[0].y-Y,f[0].z-Z,f[0].ti-F
+              f[0].h-H,f[0].B.X()-X,f[0].B.Y()-Y,f[0].B.Z()-Z,f[0].ti-F
               );
         System.out.printf("Rate:                      %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f\n",
               toDegrees(f[1].dec)*60,toDegrees(f[1].dip)*60,
-              f[1].h,f[1].x,f[1].y,f[1].z,f[1].ti
+              f[1].h,f[1].B.X(),f[1].B.Y(),f[1].B.Z(),f[1].ti
               );
         System.out.printf("File:                      %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f\n",
               toDegrees(dD)*60,toDegrees(dI)*60,
@@ -183,7 +280,7 @@ public class EarthMagKWMM2005 implements Magnetosphere {
               );
         System.out.printf("Diff:                      %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f %9.1f\n",
               toDegrees(f[1].dec-dD)*60,toDegrees(f[1].dip-dI)*60,
-              f[1].h-dH,f[1].x-dX,f[1].y-dY,f[1].z-dZ,f[1].ti-dF
+              f[1].h-dH,f[1].B.X()-dX,f[1].B.Y()-dY,f[1].B.Z()-dZ,f[1].ti-dF
               );
       } else {
         return;
@@ -209,11 +306,11 @@ public class EarthMagKWMM2005 implements Magnetosphere {
           double flnmj = (double)((n-m+1)*j)/(double)(n+m);
           snorm[n][m] = snorm[n][m-1]*sqrt(flnmj);
           j = 1;
-          h[n][m] = snorm[n][m]*WMM2005Cof[n][m][1];
-          hd[n][m] = snorm[n][m]*WMM2005Cof[n][m][3];
+          h[n][m] = snorm[n][m]*WMMCof[n][m][1];
+          hd[n][m] = snorm[n][m]*WMMCof[n][m][3];
         }
-        g[n][m] = snorm[n][m]*WMM2005Cof[n][m][0];
-        gd[n][m] = snorm[n][m]*WMM2005Cof[n][m][2];
+        g[n][m] = snorm[n][m]*WMMCof[n][m][0];
+        gd[n][m] = snorm[n][m]*WMMCof[n][m][2];
       }
       fn[n] = (double)(n+1);
       fm[n] = (double)n;

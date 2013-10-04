@@ -20,6 +20,9 @@ public class MathVector implements Cloneable, Serializable, Lerpable {
    * (which should never happen)
    */
   private static final long serialVersionUID=-4344466443705010622L;
+  public static final MathVector I=new MathVector(1,0,0);
+  public static final MathVector J=new MathVector(0,1,0);
+  public static final MathVector K=new MathVector(0,0,1);
   /**
    * Components of this vector
    */

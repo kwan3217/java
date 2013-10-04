@@ -274,7 +274,7 @@ public class Quaternion extends Rotator implements Lerpable {
    * Uses this quaternion to rotate a vector. Quaternion must be unit length
    * (see {@link #norm(Quaternion)}). This transform is equivalent to a right-handed
    * frame transform using the equivalent AxisAngle representation, and is also
-   * considered from2to where that matters.
+   * considered from2to where that matters. Convention is v_to=q'*v_from*q
    */
   public MathVector transform(MathVector in) {
     Quaternion Q1=this.conj().mul(in);

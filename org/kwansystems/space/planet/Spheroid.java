@@ -191,12 +191,12 @@ public class Spheroid {
      @param xyz Cartesian spheroid-fixed coordinate to start with. Should be in meters
      @return A MathVector where the first element is the latitude in radians, second is longitude in radians, and third is height above spheroid surface in meters
    */
-  public MathVector xyz2lla(MathVector xyz) {
+  public double[] xyz2lla(MathVector xyz) {
     if(f==0) {
       double lat=Math.PI/2-MathVector.vangle(new MathVector(0,0,1), xyz);
       double lon=Math.atan2(xyz.Y(),xyz.X());
       double alt=xyz.length()-Re;
-      return new MathVector(lat,lon,alt);
+      return new double[] {lat,lon,alt};
     }
     double x=xyz.X();
     double y=xyz.Y();
@@ -241,7 +241,7 @@ public class Spheroid {
       lat=atan((1.0-t*t)*a/(2*b*t));
       alt=(r-a*t)*cos(lat)+(z-b)*sin(lat);
     }
-    return new MathVector(lat,lon,alt);
+    return new double[] {lat,lon,alt};
   }
 
   /**
@@ -289,10 +289,10 @@ public class Spheroid {
   }
 
   public static void main(String[] args) {
-    MathVector result=WGS84.xyz2lla(new MathVector(-1288488.9373,-4720620.9617,4079778.3407));
-    MathVector test=new MathVector(0.69828684115439,-1.83725477406124,1612.59993154183);
-    System.out.println("Result of computation: "+result);
-    System.out.println("Comparison value:      "+test);
+    double[] result=WGS84.xyz2lla(new MathVector(-1288488.9373,-4720620.9617,4079778.3407));
+    double[] test=new double[] {0.69828684115439,-1.83725477406124,1612.59993154183};
+    System.out.print("Result of computation: {");for(int i=0;i<result.length;i++)System.out.printf("%20.14e,",result[i]);System.out.println("}");
+    System.out.print("Comparison value:      {");for(int i=0;i<test  .length;i++)System.out.printf("%20.14e,",test  [i]);System.out.println("}");
   }
 
 }
