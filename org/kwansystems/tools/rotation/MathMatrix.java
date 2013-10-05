@@ -8,7 +8,7 @@ import static java.lang.Math.*;
  * the common and less common math operations on a matrix.
  */
 public class MathMatrix extends Rotator {
-
+  //first index is row, second is column, in keeping with normal textbooks and the opposite of IDL
   private final double[][] values;
 
   public MathMatrix(double[][] lvalues) {
@@ -81,11 +81,22 @@ public class MathMatrix extends Rotator {
   public double get(int row, int col) {
     return values[row][col];
   }
+  public void set(int row, int col, double x) {
+	values[row][col]=x;
+  }
+  public MathVector getRow(int row) {
+	return new MathVector(values[row]);
+  }
+  public MathVector getCol(int col) {
+	double[] result=new double[values.length];
+	for(int i=0;i<values.length;i++) result[i]=values[i][col];
+	return new MathVector(result);
+  }
   private double[][] getNewValues() {
     return new double[values.length][values[0].length];
   }
   public MathMatrix T() {
-    double[][] newValues=getNewValues();
+    double[][] newValues=new double[cols()][rows()];
     for(int row=0;row<rows();row++) {
       for(int col=0;col<cols();col++) {
         newValues[col][row]=get(row,col);
@@ -101,6 +112,13 @@ public class MathMatrix extends Rotator {
       }
     }
     return new MathMatrix(newValues);
+  }
+  public void mulEq(double S) {
+    for(int row=0;row<rows();row++) {
+      for(int col=0;col<cols();col++) {
+        values[row][col]=get(row,col)*S;
+      }
+    }
   }
   public MathMatrix add(double S) {
     double[][] newValues=getNewValues();
@@ -133,6 +151,15 @@ public class MathMatrix extends Rotator {
   public MathMatrix add(MathMatrix B) {
     return MathMatrix.add(this,B);
   }
+  public void addEq(MathMatrix B) {
+    AssertEqualSize(this,B);
+    for(int row=0;row<rows();row++) {
+      for(int col=0;col<cols();col++) {
+        values[row][col]+=B.get(row,col);
+      }
+    }
+  }
+
   public static MathMatrix sub(MathMatrix A, MathMatrix B) {
     AssertEqualSize(A,B);
     double[][] newValues=A.getNewValues();
@@ -393,7 +420,30 @@ public class MathMatrix extends Rotator {
                                                         new MathVector(4,5,6),
                                                         new MathVector(7,8,9)},false));
                                                         
-                   
+    //Test out point-toward using example from Kwan Hypertext Library
+    MathVector p_b=new MathVector(cos(toRadians(13)),                   0,                                    -sin(Math.toRadians(13)));
+    MathVector p_r=new MathVector(cos(toRadians(30))*sin(toRadians(80)),cos(toRadians(30))*cos(toRadians(80)), sin(Math.toRadians(30)));
+    MathVector t_b=new MathVector(0,0, 1);
+    MathVector t_r=new MathVector(0,0,-1);
+    MathMatrix M_br=MathMatrix.pointToward(p_r, t_r, p_b, t_b);
+    System.out.println(M_br);
+    System.out.println(M_br.transform(p_b));
+    System.out.println(M_br.transform(t_b));
+    Quaternion q_br=M_br.toQuaternion();
+    System.out.println(q_br);
+    System.out.println(q_br.transform(p_b));
+    System.out.println(q_br.transform(t_b));
+    
+    //Test out Cholesky decomposition according to Wikipedia example
+    MathMatrix A=new MathMatrix(new MathVector[] {new MathVector(  4, 12,-16),
+            new MathVector( 12, 37,-43),
+            new MathVector(-16,-43, 98)},true);
+    System.out.println(A);
+    System.out.println(A.choldc());
+    A.choldcEq();
+    System.out.println(A);
+    
+    
   }
   /**
    * Constructs a new quaternion from a direction cosine matrix.
@@ -475,5 +525,36 @@ public class MathMatrix extends Rotator {
   public MathMatrix sub(MathMatrix B) {
     return MathMatrix.sub(this,B);
   }
-
+  public static MathMatrix pointToward(MathVector p_r, MathVector t_r, MathVector p_b, MathVector t_b) {
+	MathVector s_b=MathVector.cross(p_b,t_b).normal();
+	MathVector u_b=MathVector.cross(p_b,s_b).normal();
+	MathVector s_r=MathVector.cross(p_r,t_r).normal();
+	MathVector u_r=MathVector.cross(p_r,s_r).normal();
+    MathMatrix R=new MathMatrix(new MathVector[] {p_r,s_r,u_r},false);
+	MathMatrix B=new MathMatrix(new MathVector[] {p_b,s_b,u_b},false);
+	MathMatrix M_BR=MathMatrix.mul(R,B.T());
+    return M_BR;
+  }
+  public MathMatrix choldc() throws IllegalArgumentException {
+	MathMatrix result=new MathMatrix(this);
+	result.choldcEq();
+    for(int i_col=1;i_col<result.values.length;i_col++) for(int i_row=0;i_row<i_col;i_row++) result.values[i_row][i_col]=0; //erase the upper triangular
+	return result;
+  }
+  public void choldcEq() throws IllegalArgumentException {
+    //Copied straight from Wikipedia, so following their index names, except rebasing them at zero
+	for(int j=0;j<values.length;j++) {
+	  double acc=0;
+	  for(int k=0;k<j;k++) acc+=values[j][k]*values[j][k];
+	  double d=values[j][j]-acc;
+	  if(d<0) throw new IllegalArgumentException("Input is not positive-definite");
+	  values[j][j]=sqrt(d);
+	  
+	  for(int i=j+1;i<values.length;i++) {
+		acc=0;
+		for(int k=0;k<j;k++) acc+=values[i][k]*values[j][k];
+		values[i][j]=(values[i][j]-acc)/values[j][j];
+	  }
+	}
+  }
 }
