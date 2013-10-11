@@ -58,6 +58,7 @@ public class BlackBrantModel extends RocketometerModel {
 
 	  //thrust
 	  double v_e,md;
+	  MathVector a_thrust=new MathVector(0,0,0);
 	  if(t<0) {
 		v_e=0;
 		md=0;
@@ -74,12 +75,13 @@ public class BlackBrantModel extends RocketometerModel {
 		v_e=0;
 		md=0;
 	  }
-	  double FF=-md*v_e;
-	  double aa=FF/m;
-	  //state quaternion is r2b, so use conjugate to get b2r
-    MathVector f=q.invTransform(MathVector.K); //Thrust direction is body +Z axis
-	  MathVector a_thrust=f.mul(aa);
-		  
+	  if(v_e>0) {
+	    double FF=-md*v_e;
+	    double aa=FF/m;
+  	  //state quaternion is r2b, so use conjugate to get b2r
+        MathVector f=q.invTransform(MathVector.K); //Thrust direction is body +Z axis
+    	a_thrust=f.mul(aa);
+	  }
 	  //roll rate
     double wzd;
     if(t<0) {
