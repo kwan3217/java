@@ -245,5 +245,7 @@ public class KwanLowerAtmosphere extends Atmosphere {
     System.out.println(AP);
     AP=A.calcProps(83000);          //PMC Cloud Deck
     System.out.println(AP);
+    AP=A.calcProps(100000);         //Above the top of the model - should return vacuum
+    System.out.println(AP);
   }
 }

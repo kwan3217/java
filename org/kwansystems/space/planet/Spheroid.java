@@ -291,6 +291,7 @@ public class Spheroid {
   public static void main(String[] args) {
     double[] result=WGS84.xyz2lla(new MathVector(-1288488.9373,-4720620.9617,4079778.3407));
     double[] test=new double[] {0.69828684115439,-1.83725477406124,1612.59993154183};
+    System.out.println(WGS84);
     System.out.print("Result of computation: {");for(int i=0;i<result.length;i++)System.out.printf("%20.14e,",result[i]);System.out.println("}");
     System.out.print("Comparison value:      {");for(int i=0;i<test  .length;i++)System.out.printf("%20.14e,",test  [i]);System.out.println("}");
   }

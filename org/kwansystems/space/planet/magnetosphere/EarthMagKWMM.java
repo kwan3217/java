@@ -193,8 +193,11 @@ public class EarthMagKWMM implements Magnetosphere {
      {      -0.8 ,     -0.2  ,     -0.1 ,       0.0},   // 12 11
      {       0.0 ,      0.9  ,      0.1 ,       0.0}}}; // 12 12
    public static void main(String[] args) throws IOException {
-    EarthMagKWMM E=new EarthMagKWMM(2005);
-    E.testFile("Data/EarthMagWMM2005/WMM2006_TestValues.txt");
+//    EarthMagKWMM E=new EarthMagKWMM(2005);
+//    E.testFile("Data/EarthMagWMM2005/WMM2006_TestValues.txt");
+    EarthMagKWMM E2010=new EarthMagKWMM(2010);
+    System.out.println(E2010.calcProps(100, Math.toRadians(-80), Math.toRadians(240), 2012.5).B);
+    System.out.println(E2010.calcProps(100, Math.toRadians(-80), Math.toRadians(240), 2012.5).B);
   }
   private final double[][][] WMMCof;
   private int maxord;
