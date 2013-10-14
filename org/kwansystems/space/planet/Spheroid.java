@@ -294,6 +294,10 @@ public class Spheroid {
     System.out.println(WGS84);
     System.out.print("Result of computation: {");for(int i=0;i<result.length;i++)System.out.printf("%20.14e,",result[i]);System.out.println("}");
     System.out.print("Comparison value:      {");for(int i=0;i<test  .length;i++)System.out.printf("%20.14e,",test  [i]);System.out.println("}");
+    MathVector in=new MathVector(-1515076.2235344253, -5173072.217067834, 3400279.6625125329);
+    result=WGS84.xyz2lla(in);
+    System.out.print("Result of computation: {");for(int i=0;i<result.length;i++)System.out.printf("%20.14e,",result[i]);System.out.println("}");
+    System.out.println(Planet.Earth.Wind(in));
   }
 
 }

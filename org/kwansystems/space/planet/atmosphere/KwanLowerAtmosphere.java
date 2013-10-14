@@ -232,20 +232,20 @@ public class KwanLowerAtmosphere extends Atmosphere {
   public static void main(String[] args) {
     KwanLowerAtmosphere A=new KwanLowerAtmosphere();
     AirProperties AP=A.calcProps(0);
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(5334.0*0.3048); //Boulder (Folsom field level)
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(6885.0*0.3048); //Top of the Flatirons(?)
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(14200.0*0.3048); //Top of Mt Evans
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(29035.0*0.3048); //Top of Mt Everest
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(49112.48);       //"50km" height in calc_albedo model (2.4e23 /cm^2 coldens)
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(83000);          //PMC Cloud Deck
-    System.out.println(AP);
+    System.out.println(AP.Density);
     AP=A.calcProps(100000);         //Above the top of the model - should return vacuum
-    System.out.println(AP);
+    System.out.println(AP.Density);
   }
 }
