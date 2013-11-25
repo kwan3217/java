@@ -8,10 +8,7 @@ import java.io.*;
 import java.util.zip.GZIPOutputStream;
 
 import org.kwansystems.tools.vector.*;
-import org.kwansystems.tools.rotation.*;
-import org.kwansystems.kalman.*;
 import org.kwansystems.space.planet.*;
-import org.kwansystems.space.planet.magnetosphere.*;
 
 import static org.kwansystems.tools.Ticker.*;
 
