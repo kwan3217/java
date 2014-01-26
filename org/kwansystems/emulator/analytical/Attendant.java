@@ -735,7 +735,7 @@ class Attendant {
                         }
                         break;
 
-                    case '�':         // Plus or minus sign
+                    case 'P':         // Plus or minus sign
                         o = (negative ? '-' : '+') + o;
                         sign = true;
                         break;

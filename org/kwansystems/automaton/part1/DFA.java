@@ -600,7 +600,7 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
     if(A==null || B==null) return true;
     return !A.equals(B);
   }
-  static boolean optimizeVerbose=false;
+  static boolean optimizeVerbose=true;
   /** Performs an optimize-in-place. This uses the algorithm in the back of <a href="http://books.google.com/books?id=eijaAAAACAAJ&dq=introduction+to+Compiler+Construction">Parsons</a>
    * to find and remove redundant states. This includes an extension to the algorithm which distinguishes two states which are
    * otherwise indistinguishable, but have different Moore outputs, or transitions with different Mealy outputs. In this
@@ -651,7 +651,10 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
       dif.get(j).put(Crash,true);
       dif.get(Crash).put(j,true);
     }
-    if(optimizeVerbose)System.out.println(difToString(dif));
+    if(optimizeVerbose) {
+    	System.out.println("Between step 1 and 2");
+    	System.out.println(difToString(dif));
+    }
     //Step 2 - Deduce other distinguishable states
     ii=0;
     for(StateNameType i:StateList) {
@@ -660,7 +663,12 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
         if(jj>ii) {
           //Is this pair known to be distinguishable yet?
           if(!dif.get(i).get(j)) {
+        	int kk=0;
             for(AlphabetType sym:getAlphabet()) {
+              if(optimizeVerbose) {
+                System.out.printf("Step 2 ii=%d/%d, jj=%d/%d, kk=%d/%d\n",ii,StateList.size(),jj,StateList.size(),kk,getAlphabet().size());
+              }
+              kk++;
               StateNameType pair1,pair2;
               State<AlphabetType,StateNameType> row=Delta.get(i);
               if(row!=null) {
@@ -698,6 +706,7 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
               } else if(dif.get(pair1).get(pair2)) {
                 // The new pair is distinguishable, so the old one is too.
                 // Mark it and all its associated stuff such, recursively
+                if(optimizeVerbose) System.out.println("A");
                 markDif(dif,asn,i,j);
               } else {
                 //Don't know yet. Put the old pair into the new pairs list
@@ -714,7 +723,10 @@ public class DFA<AlphabetType,StateNameType> implements Serializable {
     }
     //We're done with the associations at this point, so let it go
     asn=null;
-    if(optimizeVerbose)System.out.println(difToString(dif));
+    if(optimizeVerbose) {
+    	System.out.println("Between step 2 and 3");
+    	System.out.println(difToString(dif));
+    }
     //Step 3 - Remove the redundant states
     List<Set<StateNameType>> statesToMerge=new ArrayList<Set<StateNameType>>();
     ii=0;

@@ -123,7 +123,6 @@ class Mill {
                 opargs = 2;
                 break;
 
-            case '�':
             case '*':
             case 'x':
                 operation = OP_MULTIPLY;

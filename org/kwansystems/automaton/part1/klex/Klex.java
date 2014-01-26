@@ -80,25 +80,25 @@ public abstract class Klex<TokenType> implements MooreListener,SymbolListener<Ch
   private void Generate() {
     Fork<TokenType> RT=new Fork<TokenType>(getTokenDefs());
     NFA<Character,String> a=RT.getNFA("Klex");
-    printDebug(DataPrefix()+"KlexNFAS.dot",a.DotNFATransitionTable("Klex"));
-    printDebug(DataPrefix()+"KlexNFAS.txt",a.WikiNFATransitionTable());
+//    printDebug(DataPrefix()+"KlexNFAS.dot",a.DotNFATransitionTable("Klex"));
+//    printDebug(DataPrefix()+"KlexNFAS.txt",a.WikiNFATransitionTable());
 
     NFA<Character,Integer> b=a.numberStates();
     a=null;
-    printDebug(DataPrefix()+"KlexNFA.dot",b.DotNFATransitionTable("Klex"));
-    printDebug(DataPrefix()+"KlexNFA.txt",b.WikiNFATransitionTable());
+//    printDebug(DataPrefix()+"KlexNFA.dot",b.DotNFATransitionTable("Klex"));
+//    printDebug(DataPrefix()+"KlexNFA.txt",b.WikiNFATransitionTable());
     
     DFA<Character,Set<Integer>> dfaS=b.Kleene();
-    printDebug(DataPrefix()+"KlexNonoptDFAN.dot",dfaS.DotTransitionTable("Klex"));
-    printDebug(DataPrefix()+"KlexNonoptDFAN.txt",dfaS.WikiTransitionTable());
+//    printDebug(DataPrefix()+"KlexNonoptDFAN.dot",dfaS.DotTransitionTable("Klex"));
+//    printDebug(DataPrefix()+"KlexNonoptDFAN.txt",dfaS.WikiTransitionTable());
 
     dfa=dfaS.numberStates();
-    printDebug(DataPrefix()+"KlexNonoptDFA.dot",dfa.DotTransitionTable("Klex"));
-    printDebug(DataPrefix()+"KlexNonoptDFA.txt",dfa.WikiTransitionTable());
+//    printDebug(DataPrefix()+"KlexNonoptDFA.dot",dfa.DotTransitionTable("Klex"));
+//    printDebug(DataPrefix()+"KlexNonoptDFA.txt",dfa.WikiTransitionTable());
 
     dfa.optimize(-1);
-    printDebug(DataPrefix()+"KlexDFA.dot",dfa.DotTransitionTable("Klex"));
-    printDebug(DataPrefix()+"KlexDFA.txt",dfa.WikiTransitionTable());
+//    printDebug(DataPrefix()+"KlexDFA.dot",dfa.DotTransitionTable("Klex"));
+//    printDebug(DataPrefix()+"KlexDFA.txt",dfa.WikiTransitionTable());
   }
   public void OutputMoore(Object MooreOutput) {
     if(MooreOutput!=null) {

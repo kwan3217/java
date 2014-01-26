@@ -31,7 +31,7 @@ public class PorkchopModel {
   private double departWeight,arriveWeight;
   
   public PorkchopModel() {
-    uis=new HashSet<>();
+    uis=new HashSet<PorkchopUI>();
     departHp=185000;
     arriveHp=185000;
   }

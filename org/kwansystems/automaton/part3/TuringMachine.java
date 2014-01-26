@@ -69,7 +69,7 @@ public class TuringMachine<StateNameType> extends DFA<Character,StateNameType> i
 //  TextTuringMachine TM=new TextTuringMachine(new PrintStream(new FileOutputStream("Data/Turing/UTM.blank.turing.trace")));
 //  TM.LoadTransitionTable(new LineNumberReader(new FileReader("Data/Turing/UTM.blank.turing")));
 //  TM.tape.Load("ccK0c11R0c11R1cc0c0c111R1cc1111R_c111R0c111R1cc0c0c0ccc@10");
-    TuringMachine<String> TM=new TuringMachine<>(DFA.LoadTransitionTable(new LineNumberReader(new FileReader("Data/Turing/BusyBeaver4.turing"))));
+    TuringMachine<String> TM=new TuringMachine<String>(DFA.LoadTransitionTable(new LineNumberReader(new FileReader("Data/Turing/BusyBeaver4.turing"))));
     TM.setTape(new ArrayListTwoWayTape<Character>());
     TM.addAutomatonListener(new TextDFAListener<Character,String>(System.out/*new PrintStream(new FileOutputStream("Data/Turing/Wolfram23.turing.trace"))*/));
 //TM.LoadTransitionTable(new LineNumberReader(new FileReader("Data/Turing/BusyBeaver3.turing")));

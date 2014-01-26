@@ -200,7 +200,7 @@ class analyticalEngine {
 
                 case '+':
                 case '-':
-                case '�': case '*': case 'x':
+                case '*': case 'x':
                 case '/':
                     mill.setOperation(operation);
                     break;

@@ -9,12 +9,11 @@ import java.util.*;
 
 import org.kwansystems.automaton.*;
 import org.kwansystems.automaton.part1.DFA;
-import org.kwansystems.tools.*;
 import org.kwansystems.automaton.part1.klex.*;
 import org.kwansystems.automaton.part2.kyacc.KGold.*;
 import org.kwansystems.automaton.part2.kyacc.Grammar.*;
 import org.kwansystems.automaton.part2.kyacc.ParserGenerator.Assoc;
-import org.kwansystems.automaton.regexp.*;
+import org.kwansystems.automaton.part1.regexp.*;
 import org.kwansystems.automaton.tape.*;
 
 import static org.kwansystems.automaton.part2.kyacc.KGold.TokenType.*;
@@ -288,7 +287,7 @@ public class KGold {
   }
   public static void main(String args[]) throws IOException {
     StringBuffer SS=new StringBuffer();
-    LineNumberReader inf=new LineNumberReader(new FileReader("Data/KGold/MiniLogoGrammar.txt"));
+    LineNumberReader inf=new LineNumberReader(new FileReader("Data/KGold/NewNMEA.txt"));
     String S=inf.readLine();
     while(S!=null) {
       SS.append(S);
@@ -300,7 +299,7 @@ public class KGold {
     KGoldLex.setTape(new StringTape(SS.toString()));
     KGoldLR.parse(KGoldLex);
 
-    //Number the user tokens
+    System.out.println("Number the user tokens");
     final UserTokenType[] userTokenTypes=new UserTokenType[tokentype.size()];
     Map<String,UserTokenType> invMap=new LinkedHashMap<String,UserTokenType>();
     int i=0;
@@ -319,7 +318,7 @@ public class KGold {
       }
     }
 
-    //Build the DFA table
+    System.out.println("Build the DFA table");
     Klex<UserTokenType> UserLex=new Klex<UserTokenType>(userTokenTypes[0]) {
       public String DataPrefix() {
         return "Data/KGold/User";
@@ -343,7 +342,7 @@ public class KGold {
     };
     DFA<Character,Integer> dfa=UserLex.dfa;
 
-   //Number the productions and tokens
+    System.out.println("Number the productions and tokens");
     List<Production> LuserProds=new ArrayList<Production>();
     int nProds=0;
     for(String SSS:prods.keySet()) {
@@ -354,7 +353,8 @@ public class KGold {
       }
     }
     Production[] userProds=LuserProds.toArray(new Production[]{});
-    //Build the parse table
+    
+    System.out.println("Build the parse table");
     for(Production P:userProds) {
       P.leftSide=userTokenTypes[indexOf(tokentype,P.leftSide)];
       for(int k=0;k<P.rightSide.size();k++) {
@@ -367,7 +367,7 @@ public class KGold {
     Grammar KUserGrammar=new Grammar(startSymbol,userTokenTypes[0],userProds);
     LRParser KUserLR=new LRParser(KUserGrammar,new ParsonsLR1().Generate(KUserGrammar,UserPrec,UserAssoc,"Data/Grammar/KGoldUser"));
 
-    //Print out the results
+    System.out.println("Print out the results");
     System.out.println(toString(dfa,KUserLR));
   }
 }

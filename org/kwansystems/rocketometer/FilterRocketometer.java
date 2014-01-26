@@ -19,7 +19,7 @@ public class FilterRocketometer {
 	inf.close();
 	System.out.println(t.length);
 	MathVector x0=s[0];
-	0MathMatrix PP=new MathMatrix(new double[] {1,1,1,0.1,0.1,0.1,0.1,0.1,0.1,1e-3,1e-3,1e-3,1e-3,1e-3,1e-3,1e-3,1});
+	MathMatrix PP=new MathMatrix(new double[] {1,1,1,0.1,0.1,0.1,0.1,0.1,0.1,1e-3,1e-3,1e-3,1e-3,1e-3,1e-3,1e-3,1});
 	MathMatrix QQ=new MathMatrix(new double[] {
 		0,0,0, //no process noise on position
         0,0,0, //no process noise on velocity
