@@ -3,6 +3,7 @@ package org.kwansystems.space.spice.daf;
 import java.io.*;
 import java.util.*;
 import org.kwansystems.tools.time.*;
+import org.kwansystems.tools.rotation.*;
 import static org.kwansystems.tools.time.TimeUnits.*;
 import static org.kwansystems.tools.time.TimeScale.*;
 import static org.kwansystems.tools.time.TimeEpoch.*;
@@ -143,7 +144,7 @@ public abstract class DoubleArrayFile {
       System.out.printf("Difference: %25.7f\n",horizons_resultDE405[i]-result[i]);
     }
 */
-   RandomAccessFile inf=new RandomAccessFile("/home/chrisj/workspace/Data/spice/MSL/spk/msl_edl_v01.bsp","r");
+   RandomAccessFile inf=new RandomAccessFile("c:/jeppesen/workspace/Data/spice/MSL/spk/msl_edl_v01.bsp","r");
  
 //    RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
 //    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
@@ -154,20 +155,78 @@ public abstract class DoubleArrayFile {
 //    }
 //   daf.dump(System.out);
     int i=1;
+    DataOutputStream ouf1=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_edl_v01_bsp.dat"));
+    DataOutputStream ouf2=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_skycrane_v01_bsp.dat"));
+    /*
     for(SummaryRecord SR:daf.sr) {
       for(Summary S:SR.summaries) {
-//        System.out.println(S);
+        System.out.println(S);
         SPKSegment SPKS=SPKSegment.loadSegment(S);
         DAFRecord[] SPKR=SPKS.Record();
-        if(SPKS.target==-76031) {
+        if(SPKS.target==-76031 && SPKS.center==499) {
           for(int j=0;j<SPKR.length;j++) {
-            System.out.printf("%15.6f,",((SPKRecord)SPKR[j]).epoch());
-            if(j%5==4) System.out.println();
+        	SPK13Record spkRecord=(SPK13Record)SPKR[j];
+            ouf1.writeDouble(spkRecord.epoch());
+            ouf1.writeDouble(spkRecord.X);
+            ouf1.writeDouble(spkRecord.Y);
+            ouf1.writeDouble(spkRecord.Z);
+            ouf1.writeDouble(spkRecord.dX);
+            ouf1.writeDouble(spkRecord.dY);
+            ouf1.writeDouble(spkRecord.dZ);
+          }
+        } else if(SPKS.target==-76 && SPKS.center==-76031) {
+          for(int j=0;j<SPKR.length;j++) {
+        	SPK13Record spkRecord=(SPK13Record)SPKR[j];
+            ouf2.writeDouble(spkRecord.epoch());
+            ouf2.writeDouble(spkRecord.X);
+            ouf2.writeDouble(spkRecord.Y);
+            ouf2.writeDouble(spkRecord.Z);
+            ouf2.writeDouble(spkRecord.dX);
+            ouf2.writeDouble(spkRecord.dY);
+            ouf2.writeDouble(spkRecord.dZ);
+            System.out.printf("%20.10fd,%20.15fd,%20.15fd,%20.15fd,%20.15fd,%20.15fd,%20.15fd\n",spkRecord.epoch(),spkRecord.X,spkRecord.Y,spkRecord.Z,spkRecord.dX,spkRecord.dY,spkRecord.dZ);
           }
         }
         i++;
       }
     }
-
+    */
+    ouf1.close();
+    ouf2.close();
+    inf.close();
+    inf=new RandomAccessFile("c:/jeppesen/workspace/Data/spice/MSL/ck/msl_edl_v01.bc","r");
+    
+//  RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
+//  RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
+    daf=DoubleArrayFile.loadKernel(inf);
+//  String[] comment=daf.comments();
+//  for(int i=0;i<comment.length;i++) {
+//    System.out.println(comment[i]);
+//  }
+// daf.dump(System.out);
+  i=1;
+  ouf1=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_edl_v01_bc.dat"));
+  for(SummaryRecord SR:daf.sr) {
+    for(Summary S:SR.summaries) {
+      System.out.println(S);
+      CK03Segment CKS=(CK03Segment)CKSegment.loadSegment(S);
+//      DAFRecord[] CKR=CKS.Record();
+      if(CKS.frame==1) {
+      double[] sclk=CKS.sclk();
+      Quaternion[] q=CKS.q();
+      for(int j=0;j<sclk.length;j++) {
+        ouf1.writeDouble(sclk[j]);
+        ouf1.writeDouble(q[j].X());
+        ouf1.writeDouble(q[j].Y());
+        ouf1.writeDouble(q[j].Z());
+        ouf1.writeDouble(q[j].W());
+      }
+      }
+      i++;
+    }
   }
+  ouf1.close();
+  ouf2.close();
+  }
+
 }
