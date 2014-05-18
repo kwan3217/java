@@ -26,8 +26,8 @@ public abstract class DoubleArrayFile {
     }
     if(segsum==null) {
       throw new IllegalArgumentException(
-        String.format("No segment found which covers body %d and time %s", body,new Time(t,Seconds,TDB,J2000).toString())
-      );
+          String.format("No segment found which covers body %d and time %s", body,new Time(t,Seconds,TDB,J2000).toString())
+          );
     }
     return segsum;
   }
@@ -119,9 +119,9 @@ public abstract class DoubleArrayFile {
     return result.toArray(new String[0]);
   }
   public static void main(String[] args) throws IOException {
-//    RandomAccessFile inf=new RandomAccessFile("Data/spice/spk_2009067000000_2009070185721_kplr.bsp","r");
-//    RandomAccessFile inf=new RandomAccessFile("Data/spice/spk_090307_090308_od004_v1.bsp","r");
-/*
+    //    RandomAccessFile inf=new RandomAccessFile("Data/spice/spk_2009067000000_2009070185721_kplr.bsp","r");
+    //    RandomAccessFile inf=new RandomAccessFile("Data/spice/spk_090307_090308_od004_v1.bsp","r");
+    /*
     RandomAccessFile inf=new RandomAccessFile("Data/spice/de405.bsp","r");
 //    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
     DoubleArrayFile daf=DoubleArrayFile.loadKernel(inf);
@@ -143,17 +143,17 @@ public abstract class DoubleArrayFile {
       System.out.printf("Calculated: %25.7f\n",result[i]);
       System.out.printf("Difference: %25.7f\n",horizons_resultDE405[i]-result[i]);
     }
-*/
-   RandomAccessFile inf=new RandomAccessFile("c:/jeppesen/workspace/Data/spice/MSL/spk/msl_edl_v01.bsp","r");
- 
-//    RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
-//    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
+     */
+    RandomAccessFile inf=new RandomAccessFile("c:/jeppesen/workspace/Data/spice/MSL/spk/msl_edl_v01.bsp","r");
+
+    //    RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
+    //    RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
     DoubleArrayFile daf=DoubleArrayFile.loadKernel(inf);
-//    String[] comment=daf.comments();
-//    for(int i=0;i<comment.length;i++) {
-//      System.out.println(comment[i]);
-//    }
-//   daf.dump(System.out);
+    //    String[] comment=daf.comments();
+    //    for(int i=0;i<comment.length;i++) {
+    //      System.out.println(comment[i]);
+    //    }
+    //   daf.dump(System.out);
     int i=1;
     DataOutputStream ouf1=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_edl_v01_bsp.dat"));
     DataOutputStream ouf2=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_skycrane_v01_bsp.dat"));
@@ -190,43 +190,42 @@ public abstract class DoubleArrayFile {
         i++;
       }
     }
-    */
+     */
     ouf1.close();
     ouf2.close();
     inf.close();
-    inf=new RandomAccessFile("c:/jeppesen/workspace/Data/spice/MSL/ck/msl_edl_v01.bc","r");
-    
-//  RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
-//  RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
+    inf=new RandomAccessFile("c:/jeppesen/IUVS-ITF-SW/anc/spice/mvn/ck/mvn_iuv_all_l0_20140402_v00004.bc","r");
+
+    //  RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
+    //  RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
     daf=DoubleArrayFile.loadKernel(inf);
-//  String[] comment=daf.comments();
-//  for(int i=0;i<comment.length;i++) {
-//    System.out.println(comment[i]);
-//  }
-// daf.dump(System.out);
-  i=1;
-  ouf1=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_edl_v01_bc.dat"));
-  for(SummaryRecord SR:daf.sr) {
-    for(Summary S:SR.summaries) {
-      System.out.println(S);
-      CK03Segment CKS=(CK03Segment)CKSegment.loadSegment(S);
-//      DAFRecord[] CKR=CKS.Record();
-      if(CKS.frame==1) {
-      double[] sclk=CKS.sclk();
-      Quaternion[] q=CKS.q();
-      for(int j=0;j<sclk.length;j++) {
-        ouf1.writeDouble(sclk[j]);
-        ouf1.writeDouble(q[j].X());
-        ouf1.writeDouble(q[j].Y());
-        ouf1.writeDouble(q[j].Z());
-        ouf1.writeDouble(q[j].W());
+    //  String[] comment=daf.comments();
+    //  for(int i=0;i<comment.length;i++) {
+    //    System.out.println(comment[i]);
+    //  }
+    // daf.dump(System.out);
+    i=1;
+ //   ouf1=new DataOutputStream(new FileOutputStream("c:/jeppesen/workspace/Data/msl_edl_v01_bc.dat"));
+    for(SummaryRecord SR:daf.sr) {
+      for(Summary S:SR.summaries) {
+        System.out.println(S);
+        if(i==2) {
+          CK02Segment CKS=(CK02Segment)CKSegment.loadSegment(S);
+          //      DAFRecord[] CKR=CKS.Record();
+          double[] sclkStart=CKS.sclkStart();
+          double[] sclkStop=CKS.sclkStop();
+          Quaternion[] q=CKS.q();
+          for(int j=0;j<sclkStart.length;j++) {
+            System.out.printf("%20.10fd,%20.10fd,%20.15fd,%20.15fd,%20.15fd,%20.15fd\n",sclkStart[j],sclkStop[j],q[j].X(),q[j].Y(),q[j].Z(),q[j].W());
+            //        ouf1.writeDouble(sclk[j]);
+            //        ouf1.writeDouble(q[j].X());
+            //        ouf1.writeDouble(q[j].Y());
+            //        ouf1.writeDouble(q[j].Z());
+            //        ouf1.writeDouble(q[j].W());
+          }
+        }
+        i++;
       }
-      }
-      i++;
     }
   }
-  ouf1.close();
-  ouf2.close();
-  }
-
 }

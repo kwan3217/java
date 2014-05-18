@@ -32,7 +32,7 @@ public class KwanCryptWrapper {
    *   #Hash the passphrase to generate a constant length pseudorandom bit string
    *   #Use the appropriate-sized portion of that bit string as the key for Twofish
    *   #Hash the current time and use the appropriate-sized portion to generate an initialization vector (IV)
-   *   #Run the Twofish algorithm in cipher feedback mode. Do the following steps
+   *   #Run the Twofish algorithm in output feedback mode. Do the following steps
    *     #Convert the input string into bytes according to UTF-8
    *     #Break the bytes up into blocks of the appropriate length. The last block may be short.
    *     #With the IV as the initial state vector (SV), encrypt the last state vector
@@ -64,8 +64,9 @@ public class KwanCryptWrapper {
     System.arraycopy(tshash,0,IV,0,IV.length);
     return IV;
   }
-  private static Object makeKey(String passphrase) throws InvalidKeyException {
+  private static Object makeKey(String passphrase,int rounds) throws InvalidKeyException {
     byte[] passphrasehash=hash(passphrase);
+    for(int i=1;i<rounds;i++) passphrasehash=hash(passphrasehash);
     byte[] key=new byte[256/8]; //Use 256 bits of passphrase hash as key
     System.arraycopy(passphrasehash, 0, key, 0, key.length);
     return Twofish_Algorithm.makeKey(key);
@@ -75,7 +76,6 @@ public class KwanCryptWrapper {
     try {
       ciphertextBytes=plaintext.getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {
-      // TODO Auto-generated catch block
       throw new IllegalArgumentException(e);
     }
     if(debug) System.out.printf("encrypt plaintext: %s\n",Whirlpool.display(ciphertextBytes));
@@ -85,7 +85,7 @@ public class KwanCryptWrapper {
     encBytes(ciphertext,IV);
     int nblocks=ciphertextBytes.length/SV.length;
     if (0 != (ciphertextBytes.length % SV.length)) nblocks++;
-    Object sessionKey=makeKey(passphrase);
+    Object sessionKey=makeKey(passphrase,1000);
     for(int i=0;i<nblocks;i++) {
       SV=Twofish_Algorithm.blockEncrypt(SV, 0, sessionKey);
       if(debug) System.out.printf("encrypt SV %02d: %s\n",i,Whirlpool.display(SV));
@@ -102,6 +102,9 @@ public class KwanCryptWrapper {
     return ciphertext.toString();
   }
   public static String decrypt(String passphrase, String ciphertext) throws InvalidKeyException {
+    return decrypt(passphrase,ciphertext,1000);
+  }
+  public static String decrypt(String passphrase, String ciphertext, int rounds) throws InvalidKeyException {
     byte[] ciphertextBytes=decBytes(ciphertext);
     byte[] SV=new byte[Twofish_Algorithm.blockSize()];
     System.arraycopy(ciphertextBytes,0,SV,0,SV.length);
@@ -110,7 +113,7 @@ public class KwanCryptWrapper {
     System.arraycopy(ciphertextBytes,SV.length,plaintextBytes,0,plaintextBytes.length);
     int nblocks=plaintextBytes.length/SV.length;
     if (0 != (plaintextBytes.length % SV.length)) nblocks++;
-    Object sessionKey=makeKey(passphrase);
+    Object sessionKey=makeKey(passphrase,rounds);
     for(int i=0;i<nblocks;i++) {
       SV=Twofish_Algorithm.blockEncrypt(SV, 0, sessionKey);
       if(debug) System.out.printf("decrypt SV %02d: %s\n",i,Whirlpool.display(SV));
