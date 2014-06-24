@@ -194,7 +194,7 @@ public abstract class DoubleArrayFile {
     ouf1.close();
     ouf2.close();
     inf.close();
-    inf=new RandomAccessFile("c:/jeppesen/IUVS-ITF-SW/anc/spice/mvn/ck/mvn_iuv_all_l0_20140402_v00004.bc","r");
+    inf=new RandomAccessFile("c:/jeppesen/IUVS-ITF-SW/anc/spice/mvn/spk/trj_o_od018a_140312-151108_reference_v1.bsp","r");
 
     //  RandomAccessFile inf=new RandomAccessFile("c:\\Program Files\\Celestia\\extras\\voyager-full\\data\\vgr2-nep081.bsp","r");
     //  RandomAccessFile inf=new RandomAccessFile("Data/spice/phx_edl_rec_traj.bsp","r");
