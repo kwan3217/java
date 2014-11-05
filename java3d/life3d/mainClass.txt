@@ -1,1 +1,0 @@
-Main-Class: Life3D
