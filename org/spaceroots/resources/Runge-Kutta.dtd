@@ -1,0 +1,67 @@
+<!-- This is an XML DTD for explicit Runge-Kutta methods description -->
+<!-- $Id: Runge-Kutta.dtd,v 1.2 2002/08/13 19:04:02 luc Exp $ -->
+
+<!-- an explicit  Runge-Kutta method is defined by three tables
+     often presented together in the so-called Butcher array
+
+     the first table contains the time stepsof the s stages:
+          c1, c2, ..., cs
+     (c1 is always zero)
+
+     the second table contains the weights of the stages:
+          a21
+          a31, a32
+          ...
+          as1, ... ass-1
+     (this array is strictly lower triangular for explicit methods,
+      so the first row is always empty)
+
+     the third table contains the weights used to combine the
+     internal stages and compute the state at the end of the step:
+          b1, ..., bs
+
+     embedded methods also have a fourth table which is used to
+     hold another set of estimations weights, this additional set
+     is used to estimate the error (and control the integration step)
+     we do not hold these weights but rather the difference between
+     these weights and the estimation weights bi:
+          e1, ..., es
+
+-->
+
+<!ENTITY % numbers "(zero|one|integer|rational|quadratic-surd|real)*">
+
+<!ELEMENT Runge-Kutta (time-steps, internal-weights, estimation-weights, error-weights?) >
+<!ATTLIST Runge-Kutta   name   CDATA   #REQUIRED >
+
+<!-- the first element should always be 0 -->
+<!ELEMENT time-steps         %numbers;      >
+
+<!-- for explicit methods, the first row should remain empty -->
+<!ELEMENT internal-weights   (row)+         >
+<!ELEMENT row                %numbers;      >
+
+<!ELEMENT estimation-weights %numbers;      >
+
+<!ELEMENT error-weights      %numbers;      >
+
+<!-- this element is only a shortcut to express the value 0 -->
+<!ELEMENT zero               EMPTY          >
+
+<!-- this element is only a shortcut to express the value 1 -->
+<!ELEMENT one                EMPTY          >
+
+<!ELEMENT integer            (#PCDATA)      >
+
+<!-- a rational is p/q, where p and q are both integers -->
+<!ELEMENT rational           (p, q)         >
+<!ELEMENT p                  (#PCDATA)      >
+<!ELEMENT q                  (#PCDATA)      >
+
+<!-- a quadratic surd is (p1 + p2 sqrt(d)) / q where p1, p2, d and q are integers -->
+<!ELEMENT quadratic-surd     (p1, p2, d, q) >
+<!ELEMENT p1                 (#PCDATA)      >
+<!ELEMENT p2                 (#PCDATA)      >
+<!ELEMENT d                  (#PCDATA)      >
+
+<!ELEMENT real               (#PCDATA)      >

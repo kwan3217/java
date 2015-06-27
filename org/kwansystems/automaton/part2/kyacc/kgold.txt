@@ -1,0 +1,60 @@
+%NOTHING: [\0\t\n\r\f ];
+NUM:      [0-9]+;
+ID:       [A-Za-z][0-9A-Za-z]*;
+LBRACKET: \[;
+RBRACKET: \];
+PLUS:     \+;
+MINUS:    \-;
+TIMES:    \*;
+DIVIDE:   /;
+LPAREN:   \(;
+RPAREN:   \);
+ASSIGN:   =;
+COLORID   ;
+ONEOP     ;
+NOOP      ;
+TO        ;
+REPEAT    ;
+ITER      ;
+COLOR     ;
+
+%left TIMES DIVIDE;
+%left PLUS MINUS;
+
+PROG ->
+        STATEMENT
+     |  STATEMENT PROG ;
+STATEMENT ->
+        PROCDEF
+     |  INBLOCK_STATEMENT ;
+PROCDEF ->
+        PROCHEAD BLOCK;
+INBLOCK_STATEMENT ->
+        NOOP
+     |  ID
+     |  ID ASSIGN EXPR
+     |  ONEOP EXPR
+     |  COLOR COLORID
+     |  COLOR EXPR
+     |  REPTDEF ;
+PROCHEAD ->
+        TO ID ;
+BLOCK ->
+        LBRACKET BLOCKBODY;
+BLOCKBODY ->
+        RBRACKET
+     |  INBLOCK_STATEMENT BLOCKBODY;
+REPTDEF -> 
+        REPTHEAD BLOCK;
+REPTHEAD -> 
+        REPEAT EXPR;
+EXPR ->
+        EXPR PLUS EXPR
+     |  EXPR MINUS EXPR
+     |  EXPR TIMES EXPR
+     |  EXPR DIVIDE EXPR
+     |  LPAREN EXPR RPAREN
+     |  ID
+     |  NUM
+     |  MINUS NUM
+     |  ITER

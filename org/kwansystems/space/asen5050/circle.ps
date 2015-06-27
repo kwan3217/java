@@ -1,0 +1,16 @@
+306 396 translate /maxrad 270 def
+/Helvetica findfont 24 scalefont setfont 
+maxrad 3 div dup maxrad {
+  dup 
+  0 exch 0 exch 0 360 arc closepath stroke
+  dup 90 exch 3 div sub cvi 20 string cvs exch neg 0 exch moveto show 0 0 moveto
+} for
+gsave
+0 30 360 {pop 30 rotate maxrad neg 0 moveto maxrad 0 lineto stroke} for
+grestore
+/Helvetica findfont 24 scalefont setfont 
+-8 maxrad 10 add moveto (N) show 
+-8 maxrad neg 34 sub moveto (S) show
+maxrad 10 add -12 moveto (E) show
+maxrad neg 26 sub -12 moveto (W) show
+showpage
