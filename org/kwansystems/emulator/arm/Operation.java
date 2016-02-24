@@ -1,6 +1,9 @@
 package org.kwansystems.emulator.arm;
 
+import static org.kwansystems.emulator.arm.BitFiddle.*;
+
 public enum Operation {
+  /*
   LSLimm {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       boolean setFlags=!datapath.inIT;
@@ -58,16 +61,25 @@ public enum Operation {
       }
     }
   },
+  */
+  LDRlit {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      int base=datapath.r[15] & ~(0x03);
+      int address=ins.add?base+ins.imm:base-ins.imm;
+      if(ins.Rd==15) {
+        if((address & 0b11) != 0b00) throw new RuntimeException("Unpredictable"); //Address must be word-aligned
+        datapath.LoadWritePC(datapath.readMem4(address));
+      } else {
+        datapath.r[ins.Rd]=datapath.readMem4(address);
+      }
+    }
+  },
   LDRimm {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
-      boolean index=true;
-      boolean add=ins.U;
-      boolean wback=false;
-      int imm32=(ins.imm & ((1<<5)-1)) * 4;
       if(ins.cond.shouldExecute(datapath.APSR)) {
-        int offset_addr=add?(datapath.r[ins.Rn]+imm32):(datapath.r[ins.Rn]-imm32);
-        int address=index?offset_addr:datapath.r[ins.Rn];
-        if(wback) datapath.r[ins.Rn]=offset_addr;
+        int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
+        int address=ins.index?offset_addr:datapath.r[ins.Rn];
+        if(ins.wback) datapath.r[ins.Rn]=offset_addr;
         if(ins.Rd==15) {
           if((address & 0b11) != 0b00) throw new RuntimeException("Unpredictable"); //Address must be word-aligned
           datapath.LoadWritePC(datapath.readMem4(address));
@@ -77,13 +89,53 @@ public enum Operation {
       }
     }
   },
-  STRimm {
+  ANDimm {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(ins.cond.shouldExecute(datapath.APSR)) {
+        ShiftReturn r=Shift_C(datapath.r[ins.Rm],ins.shift_t,ins.shift_n,datapath.APSR_C());
+        int result=datapath.r[ins.Rn] & r.result;
+        datapath.r[ins.Rd]=result;
+        if(ins.setflags) {
+          datapath.APSR_setN(parseBit(result,31));
+          datapath.APSR_setZ(result==0);
+          datapath.APSR_setC(r.carry_out);
+        }
+      }
     }
   },
-  LDR1,LDR2,LDR3,LDR4,LDR5,LDR6,LDR7,
-  UNDEF;
-  private enum SRType {NONE,LSL,LSR,ASR,ROR,RRX};
+  STRimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
+      int address=ins.index?offset_addr:datapath.r[ins.Rn];
+      if(ins.wback) datapath.r[ins.Rn]=offset_addr;
+      datapath.writeMem4(address, datapath.r[ins.Rd]);
+    }
+  }, 
+  CMPreg {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      int shifted=Shift(datapath.r[ins.Rm],ins.shift_t,ins.shift_n,datapath.APSR_C());
+      AddWithCarryReturn r=AddWithCarry(datapath.r[ins.Rn],~shifted,true); //Implement subtract using just the adder
+      datapath.APSR_setN(parseBit(r.result,31));
+      datapath.APSR_setZ(r.result==0);
+      datapath.APSR_setC(r.carry_out);
+      datapath.APSR_setV(r.overflow);
+    }
+  },
+  IT {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      datapath.setIT(ins.firstcond,ins.mask);
+    }
+  }
+  UNDEFINED {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      throw new Undefined(String.format("Undefined instruction %08x at pc %08x",ins.imm,ins.pc));
+    }
+  },
+  UNPREDICTABLE {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      throw new Unpredictable();
+    }
+  };
   private static class ShiftReturn {
     public int result;
     public boolean carry_out;
@@ -91,34 +143,8 @@ public enum Operation {
     public ShiftReturn() {this(0,false);};
     public String toString() {return String.format("(0x%08x,%d)\n", result,carry_out?1:0);};
   };
-  private static class DecodeShiftReturn {
-    public SRType shift_t;
-    public int shift_n;
-    public DecodeShiftReturn(SRType Lshift_t, int Lshift_n) {shift_t=Lshift_t;shift_n=Lshift_n;};
-    public DecodeShiftReturn() {this(SRType.NONE,0);};
-  }
-  private static DecodeShiftReturn DecodeImmShift(int type, int imm) {
-    DecodeShiftReturn r=new DecodeShiftReturn();
-    switch(type) {
-      case 0:
-        r.shift_t=SRType.LSL;
-        r.shift_n=imm;
-      case 1:
-        r.shift_t=SRType.LSR;
-        r.shift_n=(imm==0)?32:imm;
-      case 2:
-        r.shift_t=SRType.ASR;
-        r.shift_n=(imm==0)?32:imm;
-      default: //case 3
-        if(imm==0) {
-          r.shift_t=SRType.RRX;
-          r.shift_n=1;
-        } else {
-          r.shift_t=SRType.ROR;
-          r.shift_n=imm;
-        }
-    }
-    return r;
+  private static int Shift(int value, SRType type, int amount, boolean carry_in) {
+    return Shift_C(value,type,amount,carry_in).result;
   }
   private static ShiftReturn Shift_C(int value, SRType type, int amount, boolean carry_in) {
     ShiftReturn r;
@@ -140,6 +166,24 @@ public enum Operation {
   }
   private static int LSL(int x, int n) {
     return LSL_C(x,n).result;
+  }
+  private static class AddWithCarryReturn {
+    public int result;
+    public boolean carry_out, overflow;
+  }
+  private static AddWithCarryReturn AddWithCarry(int x, int y, boolean carry_in) {
+    long ux=((long)x) & 0xFFFFFFFF;
+    long uy=((long)y) & 0xFFFFFFFF;
+    long uc=carry_in?1:0;
+    long unsigned_sum=ux+uy+uc;
+    int signed_sum=x+y+(carry_in?1:0);
+    AddWithCarryReturn r=new AddWithCarryReturn();
+    r.result=signed_sum;
+    long ur=((long)r.result) & 0xFFFFFFFF;
+    int sr=(int)r.result;
+    r.carry_out=!(ur==unsigned_sum);
+    r.overflow=!(sr==signed_sum);
+    return r;
   }
   public void execute(Datapath datapath, DecodedInstruction ins) {
     throw new RuntimeException("Unimplemented Instruction");

@@ -1,6 +1,6 @@
 package org.kwansystems.emulator.arm;
 
-import static org.kwansystems.emulator.arm.ArmDecode.parseBit;
+import static org.kwansystems.emulator.arm.BitFiddle.parseBit;
 
 public enum ConditionCode {
   EQ {@Override public boolean shouldExecute(boolean Z, boolean C, boolean N, boolean V) {return Z;};},

@@ -1,6 +1,6 @@
 package org.kwansystems.emulator.arm;
 
-public class ArmDecode {
+public class BitFiddle {
   public static int parse(int val, int lobit, int len) {
     return ((val>>lobit) & ((1<<len)-1)); 
   }
@@ -20,5 +20,4 @@ public class ArmDecode {
     return (val&~(1<<pos)) | //Clear whatever value was there...
            ((bit?1:0)<<pos); //...and set the value coming in
   }
-  public void decode(int IR) {};
 }
