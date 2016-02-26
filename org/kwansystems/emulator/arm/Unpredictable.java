@@ -1,8 +1,7 @@
 package org.kwansystems.emulator.arm;
 
 public class Unpredictable extends RuntimeException {
-  public Unpredictable() {
-    super("Unpredictable");
-  }
+  public Unpredictable(String s) {super(s);}
+  public Unpredictable() {super("Unpredictable");}
 
 }

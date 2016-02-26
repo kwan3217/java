@@ -20,4 +20,8 @@ public class BitFiddle {
     return (val&~(1<<pos)) | //Clear whatever value was there...
            ((bit?1:0)<<pos); //...and set the value coming in
   }
+  public static int writeField(int val, int pos, int len, int field) {
+    return (val & ~((((1<<len)-1)<<pos))) |
+           (field << pos);
+  }
 }
