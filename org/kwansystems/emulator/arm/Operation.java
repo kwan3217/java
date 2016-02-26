@@ -125,7 +125,7 @@ public enum Operation {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       datapath.setIT(ins.firstcond,ins.mask);
     }
-  }
+  },
   UNDEFINED {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       throw new Undefined(String.format("Undefined instruction %08x at pc %08x",ins.imm,ins.pc));

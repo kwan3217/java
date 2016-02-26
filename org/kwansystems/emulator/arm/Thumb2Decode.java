@@ -206,7 +206,7 @@ public class Thumb2Decode extends Decode {
         if(ins.mask==0b0000) return false; //SEE NOP-compatible int instructions on page 3-32
         ins.firstcond=parse(IR,4,4);
         if(ins.firstcond==0b0000) {ins.op=UNPREDICTABLE; return true;}
-        if(ins.firstcond==0b1110 && BitCount(ins.mask)!=1) {ins.op=UNPREDICTABLE; return true;}
+        //if(ins.firstcond==0b1110 && BitCount(ins.mask)!=1) {ins.op=UNPREDICTABLE; return true;}
         ins.op=IT;
         return true;
       }

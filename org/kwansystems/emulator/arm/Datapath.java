@@ -88,7 +88,7 @@ public class Datapath {
     flushPipeline();
   }
   public void setIT(int firstcond, int mask) {
-    APSR   
+    //APSR   
   }
   public boolean inIT() {
     return false;
