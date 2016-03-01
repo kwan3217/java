@@ -38,11 +38,6 @@ public class Decode {
   protected static boolean BadReg(int n) {
     return n==13 || n==15; //Can't use sp or pc in lots of places
   }
-  public static int BitCount(int n) {
-    int result=0;
-    for(int i=0;i<32;i++) if(BitFiddle.parseBit(n,i)) result++;
-    return result;
-  }
   
   protected DecodeLine[] lines;
 
@@ -54,7 +49,7 @@ public class Decode {
          ((line.zeroBits() &(~IR)) == line.zeroBits()) && //the zero bits match
            line.decode(IR, ins)) {                        //the encoding-specific routine says OK
         System.out.printf("Decoded %08x as %s\n",IR,line.toString());
-        if(ins.op==null) ins.op=line.op;
+        if(ins.op==null) ins.op=line.op();
         return ins; //The instruction is decoded, we're outtahere.
       }
     }

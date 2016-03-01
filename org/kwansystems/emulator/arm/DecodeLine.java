@@ -4,6 +4,8 @@ public interface DecodeLine {
   public boolean decode(int IR, DecodedInstruction ins);
   public int oneBits();
   public int zeroBits();
+  public Operation op();
+  public static final String delimiters="|/:'";
   /** 
    * @param bitpattern Encoding of 1 bit, 0 bit, and don't care bits. For each bit position, the
    *        one bit is set if the string is 1 in the corresponding character slot, the zero bit 
@@ -18,7 +20,8 @@ public interface DecodeLine {
     int zeroBits=0;
     int j=0;
     for(int i=0;i<16;i++) {
-      while(bitpattern.charAt(j)=='/') j++; //Use slash as field delimiter
+      while(delimiters.indexOf(bitpattern.charAt(j))>=0) j++; //Use slash as field delimiter"
+          
       if(bitpattern.charAt(j)=='1') {
         oneBits |=(1<<(15-i));
       }
@@ -30,15 +33,17 @@ public interface DecodeLine {
     }
     if(bitpattern.length()>j) {
       for(int i=16;i<32;i++) {
-        while(bitpattern.charAt(j)=='/') j++;
+        while((delimiters.indexOf(bitpattern.charAt(j))>=0)) j++;
         if(bitpattern.charAt(j)=='1') {
-          oneBits |=(1<<(15-i+16));
+          oneBits |=(1<<(47-i));
         }
         if(bitpattern.charAt(j)=='0') {
-          zeroBits|=(1<<(15-i+16));
+          zeroBits|=(1<<(47-i));
         }
         j++;
       }
+      while(j<bitpattern.length() && (delimiters.indexOf(bitpattern.charAt(j))>=0)) j++;
+      if(j!=bitpattern.length()) throw new IllegalArgumentException("Bit Pattern "+bitpattern+" is the wrong size");
     }
     return new int[] {zeroBits,oneBits};
   }

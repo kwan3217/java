@@ -1,6 +1,7 @@
 package org.kwansystems.emulator.arm;
 
 import java.io.*;
+import java.util.ArrayList;
 
 import org.kwansystems.emulator.arm.DecodedInstruction.SetFlags;
 
@@ -8,13 +9,15 @@ import static org.kwansystems.emulator.arm.ConditionCode.*;
 import static org.kwansystems.emulator.arm.BitFiddle.*;
 
 public class Datapath {
+  ArrayList<MemoryMappedDevice> devices=new ArrayList<MemoryMappedDevice>();
+  public void addDevice(MemoryMappedDevice dev) {
+    devices.add(dev);
+  }
   public static int swapEndian(int val) {
     return (((val & 0x000000FF) << 24) & 0xFF000000) |
            (((val & 0x0000FF00) <<  8) & 0x00FF0000) |
            (((val & 0x00FF0000) >>  8) & 0x0000FF00) |
            (((val & 0xFF000000) >> 24) & 0x000000FF) ;
-           
-           
   }
   private void flushPipeline() {
     System.out.println("flushPipeline()");
@@ -31,22 +34,6 @@ public class Datapath {
   //Program-visible state
   public int r[]=new int[16];
   public int APSR;
-  private byte[][] mem=new byte[0x10000][];
-  private int getSeg(int address) {
-    int seg=parse(address, 16, 16);
-    if(mem[seg]==null) mem[seg]=new byte[0x10000];
-    return seg;
-  }
-  void loadBin(String infn, int address) throws IOException {
-	  FileInputStream inf=new FileInputStream(infn);
-    int b=inf.read();
-    while(b>=0) {
-      writeMem(address,1,b,false);
-	    address++;
-	    b=inf.read();
-	  }
-	  inf.close();
-  }
   public boolean APSR_C() {return parseBit(APSR,CPos);};
   public void APSR_setC(boolean C) {APSR=setBit(APSR,CPos,C);}
   public void APSR_setC(int C) {APSR_setC(C!=0);};
@@ -61,25 +48,27 @@ public class Datapath {
   public void APSR_setZ(int Z) {APSR_setZ(Z!=0);};
   public boolean inIT=false;
   public int readMem(int address, int bytes) { 
-    int result=0;
-    for(int i=bytes-1;i>=0;i--) {
-      int seg=getSeg(address+i);
-      int blockofs=BitFiddle.parse(address+i, 0, 16);
-      result=(result<<8) | ((int)(mem[seg][blockofs]) & 0xff);
+    for(MemoryMappedDevice i:devices) {
+      if(address>=i.getBase() && address<i.getBase()+i.getSize()) {
+        return i.read(address-i.getBase(), bytes);
+      }
     }
-    System.out.printf("readMem(%08x)=%0"+String.format("%d", bytes*2)+"x\n",address,result);
-    return result; 
+    throw new RuntimeException(String.format("Memory at 0x%08x not mapped to anything",address));
   };
   public int readMem4(int address) {return readMem(address,4);} 
   public int readMem2(int address) {return readMem(address,2);} 
   public int readMem1(int address) {return readMem(address,1);}
   public void writeMem(int address, int bytes, int value, boolean debug) {
-    for(int i=0;i<bytes;i++) {
-      int seg=getSeg(address);
-      int ofs=parse(address, 0, 16);
-      mem[seg][ofs]=(byte)((value<<(8*i)) & 0xFF);
+    if(debug) {
+      System.out.printf("writeMem(%08x,%0"+String.format("%d", bytes*2)+"x)\n",address,value);
     }
-    if(debug)System.out.printf("writeMem(%08x,%0"+String.format("%d", bytes*2)+"x)\n",address,value);
+    for(MemoryMappedDevice i:devices) {
+      if(address>=i.getBase() && address<i.getBase()+i.getSize()) {
+        i.write(address-i.getBase(), bytes,value);
+        return;
+      }
+    }
+    throw new RuntimeException(String.format("Memory at 0x%08x not mapped to anything",address));
   }
   public void writeMem(int address, int bytes, int value) { 
     writeMem(address,bytes,value,true);    
@@ -131,13 +120,22 @@ public class Datapath {
     r[15]=value & ~1;
     flushPipeline();
   }
-  public void LoadWritePC(int value) {
-    //A.6.43 LoadWritePC()
-    //This procedure writes a value to the PC with the correct semantics for such writes by load instructions. That
-    //is, with BX-like interworking behavior in ARMv5 and above, and just a change to the PC in ARMv4T.
+  // A2.3.1 
+  //   ...
+  // The LoadWritePC() and ALUWritePC() functions are used for two cases where the behavior was systematically
+  // modified between architecture versions. The functions simply to aliases of the branch functions in the M-profile
+  // architecture variants:
+  public void ALUWritePC(int value) {
+    BranchWritePC(value);
+  }
+  public void BXWritePC(int value) {
+    // TODO - This code is from an older version of the book. It should work for now.
     if(value %2==0) throw new Unpredictable("Going to ARM state on a machine that doesn't support it"); //In a machine that handled ARM, we would set the T bit with bit 0 here
     System.out.printf("LoadWritePC(%08x)\n",value);
     BranchWritePC(value & ~1);
+  }
+  public void LoadWritePC(int value) {
+    BXWritePC(value);
   }
   public void StartITBlock(int firstcond, int mask) {
     //The condition codes are set up such that the high three bits specifies a pattern of flags,
@@ -194,30 +192,39 @@ public class Datapath {
     return ThumbExpandImmWithC(imm).result;
   }
   public ResultWithCarry ThumbExpandImmWithC(int imm) {
+    System.out.printf("ThumbExpandImmWithC(0x%03x): ",imm);
     if(parse(imm,10,2)==0b00) {
       ResultWithCarry r=new ResultWithCarry();
-      int imm8=parse(imm,8,2);
+      int imm8=parse(imm,0,8);
       switch(parse(imm,8,2)) {
         case 0b00:
           r.result=imm8;
+          System.out.printf("8-bit 0x%02x\n", r.result);
           break;
         case 0b01:
           if(imm8==0) throw new Unpredictable();
           r.result=imm8<<16 | imm8 << 0;
+          System.out.printf("xx=0x%02x 00|xx|00|xx 0x%08x\n", imm8, r.result);
           break;
         case 0b10:
           if(imm8==0) throw new Unpredictable();
           r.result=imm8<<24 | imm8 << 8;
+          System.out.printf("xx=0x%02x xx|00|xx|00 0x%08x\n", imm8, r.result);
           break;
         case 0b11:
           if(imm8==0) throw new Unpredictable();
           r.result=imm8<<24 | imm8 << 16 | imm8 << 8 | imm8 << 0;
+          System.out.printf("xx=0x%02x xx|xx|xx|xx 0x%08x\n", imm8, r.result);
           break;
       }
       r.carry_out=APSR_C();
+      return r;
     } else {
       int unrotated_value=1<<7 | parse(imm,0,7);
-      return ROR_C(unrotated_value,parse(imm,7,5));      
+      int rot_amount=parse(imm,7,5);
+      ResultWithCarry r=ROR_C(unrotated_value,rot_amount);
+      System.out.printf("%02x ROR %d=0x%08x\n",unrotated_value,rot_amount,r.result);
+      return r;       
     }
   }
   //Pseudocode functions which don't rely on datapath state, but are used in execute stage
@@ -242,10 +249,40 @@ public class Datapath {
     }
   };
   public static ResultWithCarry LSL_C(int x, int n) {
-    return new ResultWithCarry(x << n,(x & (1<<(32-n)))!=0);
+    return new ResultWithCarry(x << n, //Shift the word the given number of bits
+                              (x & (1<<(32-n)))!=0); //pick the carry bit out of the original answer. 
+                                                     //If the word is shifted n bits, the carry is the nth bit from the left. 
+                                                     //IE shifting 1 bit  means that the leftmost (most significant, bit 31) bit is it,
+                                                     //   shifting 2 bits means that the second leftmost bit (bit 30)
+                                                     //Therefore select bit 32-n by calculating 1<<(32-n) as the mask, ANDing with the 
+                                                     //original number, and returning true or false if the result is nonzero or zero.
   }
   public static int LSL(int x, int n) {
+    if(n==0) return x;
     return LSL_C(x,n).result;
+  }
+  public static ResultWithCarry LSR_C(int x, int n) {
+    return new ResultWithCarry(x >>> n, //Logical-shift the word the given number of bits
+                               (x & (1<<(n-1)))!=0); //Dig out the carry bit, which is the bit to the right of the lowest bit in the result.
+                                                      //IE shifting 1 bit  means that the        rightmost (least significant, bit 0) bit is it,
+                                                      //   shifting 2 bits means that the second rightmost bit (bit 1), etc.
+                                                      //Therefore select bit n-1 by calculating 1<<(n-1) as the mask, ANDing with the 
+                                                      //original number, and returning true or false if the result is nonzero or zero.
+  }
+  public static int LSR(int x, int n) {
+    if(n==0) return x;
+    return LSR_C(x,n).result;
+  }
+  public static ResultWithCarry ROR_C(int x, int n) {
+    int m=n%32;
+    ResultWithCarry r=new ResultWithCarry();
+    r.result=(m==0)?x:LSR(x,m) | LSL(x,32-m);
+    r.carry_out=parseBit(r.result,31);
+    return r;
+  }
+  public static int ROR(int x, int n) {
+    if(n==0) return x;
+    return ROR_C(x,n).result;
   }
   public static class AddWithCarryReturn {
     public int result;

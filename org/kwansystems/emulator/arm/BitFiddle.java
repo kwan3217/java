@@ -5,7 +5,7 @@ public class BitFiddle {
     return ((val>>lobit) & ((1<<len)-1)); 
   }
   public static int signExtend(int val, int len) {
-    if(( val & (1<<(len-1)) )==1) {
+    if(( val & (1<<(len-1)) )!=0) {
       val=0xFFFFFFFF & ~((1<<len)-1) | val;
     }
     return val;
@@ -24,4 +24,10 @@ public class BitFiddle {
     return (val & ~((((1<<len)-1)<<pos))) |
            (field << pos);
   }
+  public static int BitCount(int n) {
+    int result=0;
+    for(int i=0;i<32;i++) if(BitFiddle.parseBit(n,i)) result++;
+    return result;
+  }
+
 }
