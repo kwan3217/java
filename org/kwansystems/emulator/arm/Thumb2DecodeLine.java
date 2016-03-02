@@ -206,7 +206,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   BT2("11100/iiiiiiiiiii") { //Unconditional branch, usable outside of or as last instruction of IT block 
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=signExtend(parse(IR,0,8)<<1,9);
+      ins.imm=signExtend(parse(IR,0,11)<<1,12);
       //TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
     }
@@ -713,8 +713,143 @@ public enum Thumb2DecodeLine implements DecodeLine {
       if(ins.Rd==13 || ins.Rd==15 || ins.Rn==13 || ins.Rm==13 || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
     }    
+  },
+  STRDimmT1("11101/00/P/U/1/W/0/nnnn//dddd/2222/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      boolean P=parseBit(hw1,8);
+      boolean U=parseBit(hw1,7);
+      boolean W=parseBit(hw1,5);
+      if(!P && !W)      return false; //SEE "Related Encodings"
+      ins.Rd=parse(hw2,12,4);
+      ins.Rn=parse(hw1, 0,4);
+      ins.Rm=parse(hw2, 8,4); //Use Rm for Rt2
+      ins.imm=parse(hw2,0,8)<<2;
+      ins.index=P;
+      ins.add=U;
+      ins.wback=W;
+      if(ins.wback &&(ins.Rn==ins.Rd || ins.Rn==ins.Rm)) {ins.op=UNPREDICTABLE;return true;}
+      if(ins.Rn==15 || ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }    
+  },
+  LSLimmT1("000/00/iiiii/mmm/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=parse(IR,6,5);
+      if(ins.imm==0b00000) return false; //SEE MOV (register)
+      ins.Rd=parse(IR,0,3);
+      ins.Rm=parse(IR,3,3);
+      ins.setflags=SetFlags.NOT_IN_IT;
+      DecodeShiftReturn r=DecodeImmShift(0b00,ins.imm);
+      ins.shift_n=r.shift_n;
+      ins.shift_t=r.shift_t;
+      return true;
+    }    
+  },
+  LSLimmT2("11101/01/0010/S/1111//o/iii/dddd/ii/00/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2,8,4);
+      ins.Rn=parse(hw1,0,4);
+      ins.Rm=parse(hw2,0,4);
+      boolean S=parseBit(hw1,4);
+      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      if(ins.imm==0b00000) return false; //SEE MOV (register)
+      ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
+      DecodeShiftReturn r=DecodeImmShift(0b00,ins.imm);
+      ins.shift_n=r.shift_n;
+      ins.shift_t=r.shift_t;
+      if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }    
+  },
+  LDMT1("1100/1/nnn/rrrrrrrr") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm= parse(IR,0,8);
+      ins.Rn=  parse(IR,8,3);
+      ins.wback=!parseBit(ins.imm,ins.Rn); //Write back if and only if we are not loading the register used as the address 
+      if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 0 registers, it's UNPREDICTABLE
+      return true;
+    }
+  },
+  LDMT2("11101/00/010/W/1/nnnn//P/M/o/rrrrrrrrrrrrr") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      //use imm as the register list
+      ins.wback=parseBit(hw1,5);
+      ins.Rn=parse(hw1,0,4);
+      if(ins.wback && ins.Rn==0b1101) return false; //SEE POP (Thumb)
+      ins.imm=hw2; //Nominally bits 13 and 15 (specifying sp and pc) are supposed to be zero, and it is UNPREDICTABLE if they are not. We will take advantage of that
+      boolean P=parseBit(hw2,15);
+      boolean M=parseBit(hw2,14);
+      if(ins.Rn==15 || BitCount(ins.imm)<2 || (P && M)) {ins.op=UNPREDICTABLE; return true;} //If we are using pc as the stack pointer, or loading 1 or 0 registers, or loading both PC and LR, it's UNPREDICTABLE
+      //TODO - if registers<15> == '1' && InITBlock() && !LastInITBlock() then UNPREDICTABLE;
+      if(ins.wback && parseBit(ins.imm,ins.Rn))         {ins.op=UNPREDICTABLE; return true;} //If we write back to a register we are also storing, it's UNPREDICTABLE.
+      return true;
+    }
+  },
+  POPT1("1011/1/10/P/rrrrrrrr") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm= parse(IR,0,8) | parse(IR,8,1)<<15;
+      ins.UnalignedAllowed=false;
+      if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 0 registers, it's UNPREDICTABLE
+      return true;
+    }
+  },
+  POPT2("11101/00/010/1/1/1101//P/M/o/rrrrrrrrrrrrr") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      //use imm as the register list
+      ins.imm=hw2; //Nominally bit 13 (specifying sp) is supposed to be zero, and it is UNPREDICTABLE if it is not. We will take advantage of that
+      ins.UnalignedAllowed=false;
+      boolean P=parseBit(hw2,15);
+      boolean M=parseBit(hw2,14);
+      if(BitCount(ins.imm)<2 || (P && M)) {ins.op=UNPREDICTABLE; return true;} //If we are loading 1 or 0 registers, or loading both PC and LR, it's UNPREDICTABLE
+      //TODO - if registers<15> == '1' && InITBlock() && !LastInITBlock() then UNPREDICTABLE;
+      return true;
+    }
+  },
+  POPT3("11111/00/0/0/10/1/1101//dddd/1/011/00000100") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      //use imm as the register list
+      int t=parse(hw2,12,4);
+      ins.imm=1<<t;
+      ins.UnalignedAllowed=false;
+      if(t==13 /*...*/) {ins.op=UNPREDICTABLE; return true;} //If we are loading 1 or 0 registers, or loading both PC and LR, it's UNPREDICTABLE
+      //TODO -   ... || (t == 15 && InITBlock() && !LastInITBlock()) then UNPREDICTABLE;
+      return true;
+    }
+  },
+  TSTregT1("010000/1000/mmm/nnn") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rn=parse(IR,0,3);
+      ins.Rm=parse(IR,3,3);
+      ins.shift_t=SRType.LSL;
+      ins.shift_n=0;
+      return true;
+    }
+  },
+  TSTregT2("11101/01/0000/1/nnnn//o/iii/1111/ii/tt/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rn=parse(hw1,0,4);
+      ins.Rm=parse(hw2,0,4);
+      int type=parse(hw2,4,2);
+      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      DecodeShiftReturn r=DecodeImmShift(type,ins.imm);
+      ins.shift_n=r.shift_n;
+      ins.shift_t=r.shift_t;
+      if(ins.Rn==13 || ins.Rn==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
   };
-
   private int moneBits, mzeroBits;
   private String bitpattern;
   public final Operation mop;

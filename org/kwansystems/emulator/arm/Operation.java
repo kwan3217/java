@@ -72,9 +72,9 @@ public enum Operation {
         //encode d==15, so we don't have to worry that this logic only applies to T2
         if(ins.Rd==15 && datapath.InITBlock() && !datapath.LastInITBlock()) throw new Unpredictable("Trying to branch from within an IT block");
         //From here on is not encoding-specific
-        System.out.printf("Using pc%c%d as address\n",ins.add?'+':'-',ins.imm);
         int base=ins.pc+4 & ~(0x03);
         int address=ins.add?base+ins.imm:base-ins.imm;
+        System.out.printf("Using pc%c%d-0x%08x as address\n",ins.add?'+':'-',ins.imm,address);
         int data=datapath.readMem4(address);
         if(ins.Rd==15) {
           if((address & 0b11) != 0b00) throw new Unpredictable("Address is not word-aligned");
@@ -95,9 +95,9 @@ public enum Operation {
         int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
         int address=ins.index?offset_addr:datapath.r[ins.Rn];
         if(ins.index) {
-          System.out.printf("Using r%d as address\n",ins.Rn);
+          System.out.printf("Using r%d=0x%08x as address\n",ins.Rn,address);
         } else {
-          System.out.printf("Using r%d%c%d as address\n",ins.Rn,ins.add?'+':'-',ins.imm);
+          System.out.printf("Using r%d%c%d=0x%08x as address\n",ins.Rn,ins.add?'+':'-',ins.imm,address);
         }
         if(ins.wback) datapath.r[ins.Rn]=offset_addr;
         if(ins.Rd==15) {
@@ -284,7 +284,7 @@ public enum Operation {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       //TODO - something about UnalignedAllowed
       if(datapath.ConditionPassed(ins.cond)) {
-        int address=datapath.r[ins.Rn]-4*BitCount(ins.imm);
+        int address=datapath.r[13]-4*BitCount(ins.imm);
         System.out.println("Pushing register(s):");
         for(int i=0;i<=14;i++) {
           if(parseBit(ins.imm,i)) {
@@ -483,6 +483,106 @@ public enum Operation {
           System.out.printf(", V=%d\n", datapath.APSR_V()?1:0);
         }
         System.out.println();
+      }
+    }
+  },
+  STRDimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
+        int address=ins.index?offset_addr:datapath.r[ins.Rn];
+        if(ins.index) {
+          System.out.printf("Using r%d as address\n",ins.Rn);
+        } else {
+          System.out.printf("Using r%d%c%d as address\n",ins.Rn,ins.add?'+':'-',ins.imm);
+        }
+        System.out.printf("Storing r%d\n at 0x%08x", ins.Rd,address);
+        datapath.writeMem4(address, datapath.r[ins.Rd]);
+        System.out.printf("Storing r%d\n at 0x%08x", ins.Rm,address+4);
+        datapath.writeMem4(address+4, datapath.r[ins.Rm]);
+        if(ins.wback) {
+          System.out.printf("Writing back r%d=0x%08x\n", ins.Rn,offset_addr);
+          datapath.r[ins.Rn]=offset_addr;
+        }
+      }
+    }
+  }, 
+  LSLimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        ResultWithCarry r=Shift_C(datapath.r[ins.Rm],SRType.LSL,ins.shift_n,datapath.APSR_C());
+        System.out.printf("r%d=r%d(0x%08x) << %d=0x%08x", ins.Rd,ins.Rm,datapath.r[ins.Rm],ins.imm,r.result);
+        datapath.r[ins.Rd]=r.result;
+        if(datapath.shouldSetFlags(ins.setflags)) {
+          datapath.APSR_setN(parseBit(r.result,31));
+          datapath.APSR_setZ(r.result==0);
+          datapath.APSR_setC(r.carry_out);
+          System.out.printf(", N=%d", datapath.APSR_N()?1:0);
+          System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
+          System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+        }
+        System.out.println();
+      }
+    }
+  },
+  LDM {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int address=datapath.r[ins.Rn];
+        System.out.println("Loading multiple registers:");
+        for(int i=0;i<=14;i++) {
+          if(parseBit(ins.imm,i)) {
+            System.out.printf(" r%d ",i);
+            datapath.r[i]=datapath.readMem4(address);
+            address+=4;
+          }
+        }
+        if(parseBit(ins.imm,15)) {
+          System.out.printf(" r%d ",15);
+          datapath.LoadWritePC(datapath.readMem4(address));
+        }
+        if(ins.wback && parseBit(ins.imm,ins.Rn)) { //Write back last, because otherwise we would push the changed value
+          datapath.r[ins.Rn]=datapath.r[ins.Rn]+4*BitCount(ins.imm);
+          System.out.printf("Writing back, r%d=0x%08x\n", ins.Rn, datapath.r[ins.Rn]);
+        }
+      }
+    }
+  },
+  POP {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int address=datapath.r[13];
+        datapath.r[13]=datapath.r[13]+4*BitCount(ins.imm);
+        System.out.printf("Writing back, r13=0x%08x\n", datapath.r[13]);
+        System.out.println("Popping multiple registers:");
+        for(int i=0;i<=14;i++) {
+          if(parseBit(ins.imm,i)) {
+            System.out.printf(" r%d ",i);
+            datapath.r[i]=datapath.readMem4(address);
+            address+=4;
+          }
+        }
+        if(parseBit(ins.imm,15)) {
+          System.out.printf(" r%d ",15);
+          datapath.LoadWritePC(datapath.readMem4(address));
+        }
+      }
+    }
+  },
+  TSTreg {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        System.out.printf("Second argument=r%d %s %d=",ins.Rm,ins.shift_t.toString(),ins.shift_n);
+        ResultWithCarry r=Shift_C(datapath.r[ins.Rm],ins.shift_t,ins.shift_n,datapath.APSR_C());
+        System.out.printf("%08x\n", r.result);
+        int result=datapath.r[ins.Rn] & r.result; 
+        System.out.printf("result=r%d(%08x) & %08x=%08x", ins.Rn, datapath.r[ins.Rn],r.result,result);
+        datapath.APSR_setN(parseBit(result,31));
+        datapath.APSR_setZ(result==0);
+        datapath.APSR_setC(r.carry_out);
+        System.out.printf(", N=%d", datapath.APSR_N()?1:0);
+        System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
+        System.out.printf(", C=%d", datapath.APSR_C()?1:0);
       }
     }
   },

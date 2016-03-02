@@ -4,8 +4,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class ReadOnlyMemory implements MemoryMappedDevice {
-  byte mem[];
-  int base;
+  protected byte mem[];
+  protected int base;
   public ReadOnlyMemory(int Lbase, int size) {
     base=Lbase;
     mem=new byte[size];

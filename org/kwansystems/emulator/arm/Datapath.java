@@ -47,6 +47,7 @@ public class Datapath {
   public void APSR_setZ(boolean Z) {APSR=setBit(APSR,ZPos,Z);}
   public void APSR_setZ(int Z) {APSR_setZ(Z!=0);};
   public boolean inIT=false;
+  public int cycles=0; //Number of cycles since reset
   public int readMem(int address, int bytes) { 
     for(MemoryMappedDevice i:devices) {
       if(address>=i.getBase() && address<i.getBase()+i.getSize()) {
