@@ -17,11 +17,11 @@ public class SystemControlBlock extends Peripheral {
     PLLFEED0   (WO,0x08C),
     PLLFEED1   (WO,0x0AC),
     PCON       (RW,0x0C0),
-    PCONP      (RW,0x0C4),
-    PCONP1     (RW,0x0C8),
-    PBOOST     (RW,0x1B0),
+    PCONP      (RW,0x0C4,0x0408829E),
+    PCONP1     (RW,0x0C8,0x8),
+    PBOOST     (RW,0x1B0,0x3),
     EMCCLKSEL  (RW,0x100),
-    CCLKSEL    (RW,0x104),
+    CCLKSEL    (RW,0x104,1),
     USBCLKSEL  (RW,0x108),
     PCLKSEL    (RW,0x1A8),
     SPIFICLKSEL(RW,0x1B4),
@@ -43,27 +43,30 @@ public class SystemControlBlock extends Peripheral {
     CLKOUTCFG  (RW,0x1C8),
     MEMMAP     (RW,0x040), //Documented in UM10562 39.8.1
     MATRIXARB  (RW,0x188), //Documented in UM10562  2.5.1
-    SCBCRP     (RW,0x184),
+    SCBCRP     (RW,0x184), //Undocumented, seems to be related to CRP. Maybe a write-once register?
+    SysCtl1e4  (RO,0x1e4,3), //Undocumented, seems to be related to EMC. Lower two bits describe width of EMC bus
     SysCtl3C0  (RW,0x3C0);
-    public int ofs;
-    public int val;
-    public RegisterDirection dir;
-    private Registers(RegisterDirection Ldir,int Lofs) {ofs=Lofs;dir=Ldir;}
 
+    //Register boilerplate
+    public int ofs;
+    public int val, resetVal;
+    public RegisterDirection dir;
+    private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
+    private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
+    @Override
+    public void reset() {val=resetVal;}
     @Override
     public int read() {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
-
     @Override
     public void write(int Lval) {
       if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
       System.out.printf("Writing %s, value 0x%08x\n",toString(),Lval);
       val=Lval;
     }
-
     @Override
     public int getOfs() {return ofs;}
     @Override
@@ -72,5 +75,8 @@ public class SystemControlBlock extends Peripheral {
   public SystemControlBlock() {
     super("SystemControlBlock",0x400FC000);
     setupRegs(Registers.values());
+  }
+  public void reset() {
+    reset(Registers.values());
   }
 }

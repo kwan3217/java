@@ -31,26 +31,28 @@ public class Timer extends Peripheral {
     TCR1     (RO,0x030),
     TEMR     (RW,0x03C),
     TCTCR    (RW,0x070);
+    //Register boilerplate
     public int ofs;
-    public int val;
+    public int val, resetVal;
     public RegisterDirection dir;
-    private Registers(RegisterDirection Ldir,int Lofs) {ofs=Lofs;dir=Ldir;}
-
+    private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
+    private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
+    @Override
+    public void reset() {val=resetVal;}
     @Override
     public int read() {
+      if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
-
     @Override
     public void write(int Lval) {
+      if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
       System.out.printf("Writing %s, value 0x%08x\n",toString(),Lval);
       val=Lval;
     }
-
     @Override
     public int getOfs() {return ofs;}
-
     @Override
     public RegisterDirection getDir() {return dir;};
   }
@@ -72,5 +74,8 @@ public class Timer extends Peripheral {
     System.out.printf("Timer%d ",port);
     super.write(rel_addr, bytes, value);
   }
-
+  @Override
+  public void reset() {
+    reset(Registers.values());
+  }
 }

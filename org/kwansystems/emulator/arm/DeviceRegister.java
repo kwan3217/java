@@ -5,4 +5,5 @@ public interface DeviceRegister {
   public void write(int val);
   public int getOfs();
   public RegisterDirection getDir();
+  public void reset();
 }

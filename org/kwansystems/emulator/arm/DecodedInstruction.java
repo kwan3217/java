@@ -9,7 +9,7 @@ public class DecodedInstruction {
   ConditionCode cond=ConditionCode.Thumb;
   SRType shift_t=SRType.NONE;
   int shift_n;
-  boolean add,index,wback,UnalignedAllowed;
+  boolean add,index,wback,UnalignedAllowed,nonzero;
   boolean thumbExpand;
   SetFlags setflags;
   int mask, firstcond; //used in IT instruction

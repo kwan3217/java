@@ -46,4 +46,11 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
     }
     inf.close();
   }
+  /** Pokes a value into the memory, despite the fact that it is read-only */
+  public void poke(int address, int val) {
+    for(int i=0;i<4;i++) {
+      mem[address]=(byte)((val >> (i*8)) & 0xFF);
+      address++;
+    }
+  }
 }

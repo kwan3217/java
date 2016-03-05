@@ -444,8 +444,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
       //use imm as the register list
       ins.imm=hw2; //Nominally bits 13 and 15 (specifying sp and pc) are supposed to be zero, and it is UNPREDICTABLE if they are not. We will take advantage of that
       if((ins.imm & 0b1010000000000000)!=0) {ins.op=UNPREDICTABLE; return true;}
-      if(ins.Rn==15 || BitCount(ins.imm)<2) {ins.op=UNPREDICTABLE; return true;} //If we are using pc as the stack pointer, or storing 1 or 0 registers, it's UNPREDICTABLE
-      if(ins.wback && parseBit(ins.imm,ins.Rn)) {ins.op=UNPREDICTABLE; return true;} //If we write back to a register we are also storing, it's UNPREDICTABLE. Actually, the specified operation stores the un-written-back value.
+      if(BitCount(ins.imm)<2) {ins.op=UNPREDICTABLE; return true;} //If we are using pc as the stack pointer, or storing 1 or 0 registers, it's UNPREDICTABLE
       ins.UnalignedAllowed=false;
       return true;
     }
@@ -849,6 +848,78 @@ public enum Thumb2DecodeLine implements DecodeLine {
       if(ins.Rn==13 || ins.Rn==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
     }
+  },
+  STMIAT1("1100/0/nnn/rrrrrrrr") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=parse(IR,0,8);
+      ins.Rn=parse(IR,8,3);
+      ins.wback=true;
+      if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are storing 0 registers, it's UNPREDICTABLE
+      return true;
+    }
+  },
+  STMIAT2("11101/00/010/W/0/nnnn//o/M/o/rrrrrrrrrrrrr") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rn=parse(hw1,0,4);
+      ins.wback=parseBit(hw1,5);
+      //use imm as the register list
+      ins.imm=hw2; //Nominally bits 13 and 15 (specifying sp and pc) are supposed to be zero, and it is UNPREDICTABLE if they are not. We will take advantage of that
+      if((ins.imm & 0b1010000000000000)!=0) {ins.op=UNPREDICTABLE; return true;} 
+      if(ins.Rn==15 || BitCount(ins.imm)<2) {ins.op=UNPREDICTABLE; return true;} //If we are using pc as the stack pointer, or storing 1 or 0 registers, it's UNPREDICTABLE
+      if(ins.wback && parseBit(ins.imm,ins.Rn)) {ins.op=UNPREDICTABLE; return true;} //If we write back to a register we are also storing, it's UNPREDICTABLE.
+      ins.UnalignedAllowed=false;
+      return true;
+    }
+  },
+  LDRregT1("0101/100/mmm/nnn/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rd=parse(IR,0,3);
+      ins.Rn=parse(IR,3,3);
+      ins.Rm=parse(IR,6,3);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      ins.shift_t=SRType.LSL;
+      ins.shift_n=0;
+      return true;
+    }
+  },
+  LDRregT2("11111/00/0/0/10/1/nnnn//dddd/o/ooooo/ii/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2,12,4);
+      ins.Rn=parse(hw1, 0,4);
+      ins.Rm=parse(hw2, 0,4);
+      ins.index=true; //The specification doesn't say anything about these flags, so we copy the same values from the T1 encoding
+      ins.add=true;
+      ins.wback=false;
+      if(ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE; return true;}
+      // TODO - handle other UNPREDICTABLE case
+      ins.shift_t=SRType.LSL;
+      ins.shift_n=parse(hw2,4,2);
+      return true;
+    }
+  },
+  CBZT1("1011/f/0/i/1/iiiii/nnn") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rn=parse(IR,0,3);
+      ins.nonzero=parseBit(IR,11);
+      int bitpos=0;
+      int len=1;
+      ins.imm=0; 
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,0              );bitpos+=len; //0
+      len= 5;ins.imm=writeField(ins.imm,bitpos,len,parse(IR,3,len));bitpos+=len; //imm5
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(IR,9,len));bitpos+=len; //i
+      return true;
+    }
+  },
+  UNDEFINEDT1("1111/1111/1111/1111") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      return false;
+    }    
   };
   private int moneBits, mzeroBits;
   private String bitpattern;

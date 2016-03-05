@@ -37,10 +37,16 @@ public class Peripheral extends RandomAccessMemory {
       super.write(rel_addr, bytes, value);
     }
   }
+  public void reset(DeviceRegister[] registers) {
+    for(DeviceRegister r:registers) r.reset();
+  }
+  public void reset() {};
   protected void setupRegs(DeviceRegister[] registers) {
     for(DeviceRegister r:registers) {
       if(r.getDir()==RegisterDirection.RO || r.getDir()==RegisterDirection.RW) readregs.put(r.getOfs(), r);
       if(r.getDir()==RegisterDirection.WO || r.getDir()==RegisterDirection.RW) writeregs.put(r.getOfs(), r);
+      r.reset();
     }
   }
+  
 }

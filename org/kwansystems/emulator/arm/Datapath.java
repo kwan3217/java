@@ -289,19 +289,23 @@ public class Datapath {
     public int result;
     public boolean carry_out, overflow;
   }
+  public static long UInt(int x) {
+    long result=x;
+    result=result & 0xFFFFFFFFL;
+    return result;
+  }
   public static AddWithCarryReturn AddWithCarry(int x, int y, boolean carry_in) {
-    long ux=((long)x) & 0xFFFFFFFF;
-    long uy=((long)y) & 0xFFFFFFFF;
-    long uc=carry_in?1:0;
-    long unsigned_sum=ux+uy+uc;
+    long unsigned_sum=UInt(x)+UInt(y)+UInt(carry_in?1:0);
     int signed_sum=x+y+(carry_in?1:0);
     AddWithCarryReturn r=new AddWithCarryReturn();
     r.result=signed_sum;
-    long ur=((long)r.result) & 0xFFFFFFFF;
+    long ur=UInt(r.result);
     int sr=(int)r.result;
     r.carry_out=!(ur==unsigned_sum);
     r.overflow=!(sr==signed_sum);
     return r;
   }
-
+  public static void main(String[] args) {
+    AddWithCarry(8,~8,true);
+  }
 }

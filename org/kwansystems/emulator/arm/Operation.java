@@ -139,11 +139,14 @@ public enum Operation {
         int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
         int address=ins.index?offset_addr:datapath.r[ins.Rn];
         if(ins.index) {
-          System.out.printf("Using r%d as address\n",ins.Rn);
+          System.out.printf("Using r%d(0x%08x)%c%d=0x%08x as address\n",ins.Rn,datapath.r[ins.Rn],ins.add?'+':'-',ins.imm,address);
         } else {
-          System.out.printf("Using r%d%c%d as address\n",ins.Rn,ins.add?'+':'-',ins.imm);
+          System.out.printf("Using r%d(0x%08x) as address\n",ins.Rn,address);
         }
-        if(ins.wback) datapath.r[ins.Rn]=offset_addr;
+        if(ins.wback) {
+          datapath.r[ins.Rn]=offset_addr;
+          System.out.printf("Writing back 0x%08x to r%d\n", offset_addr,ins.Rn);
+        }
         System.out.printf("Storing r%d\n", ins.Rd);
         datapath.writeMem4(address, datapath.r[ins.Rd]);
       }
@@ -496,9 +499,9 @@ public enum Operation {
         } else {
           System.out.printf("Using r%d%c%d as address\n",ins.Rn,ins.add?'+':'-',ins.imm);
         }
-        System.out.printf("Storing r%d\n at 0x%08x", ins.Rd,address);
-        datapath.writeMem4(address, datapath.r[ins.Rd]);
-        System.out.printf("Storing r%d\n at 0x%08x", ins.Rm,address+4);
+        System.out.printf("Storing r%d(0x%08x) at 0x%08x\n", ins.Rd,datapath.r[ins.Rd],address);
+        datapath.writeMem4(address  , datapath.r[ins.Rd]);
+        System.out.printf("Storing r%d(0x%08x) at 0x%08x\n", ins.Rm,datapath.r[ins.Rd],address+4);
         datapath.writeMem4(address+4, datapath.r[ins.Rm]);
         if(ins.wback) {
           System.out.printf("Writing back r%d=0x%08x\n", ins.Rn,offset_addr);
@@ -583,6 +586,74 @@ public enum Operation {
         System.out.printf(", N=%d", datapath.APSR_N()?1:0);
         System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
         System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+      }
+    }
+  },
+  STMIA {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int address=datapath.r[ins.Rn];
+        System.out.println("Storing multiple registers:");
+        for(int i=0;i<=14;i++) {
+          if(parseBit(ins.imm,i)) {
+            System.out.printf(" r%d ",i);
+            //TODO - Catch UNKNOWN condition -- write LowestSetBit()
+            //if i == n && wback && i != LowestSetBit(registers) then
+            //  MemA[address,4] = bits(32) UNKNOWN; // Encoding T1 only
+            //else
+            datapath.writeMem4(address, datapath.r[i]);
+            address+=4;
+          }
+        }
+        if(ins.wback) { 
+          datapath.r[ins.Rn]=datapath.r[ins.Rn]+4*BitCount(ins.imm);
+          System.out.printf("Writing back, r%d=0x%08x\n", ins.Rn, datapath.r[ins.Rn]);
+        }
+      }
+    }
+  },
+  LDRreg {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int offset=Shift(datapath.r[ins.Rm],ins.shift_t,ins.shift_n,datapath.APSR_C());
+        int offset_addr=ins.add?(datapath.r[ins.Rn]+offset):(datapath.r[ins.Rn]-offset);
+        int address;
+        if(ins.index) {
+          address=offset_addr;
+          System.out.printf("address=r%d(0x%08x)%cr%d(0x%08x) %s %d=0x%08x\n",
+                             ins.Rn,datapath.r[ins.Rn], 
+                             ins.add?'+':'-',
+                             ins.Rm,datapath.r[ins.Rm], 
+                             ins.shift_t.toString(),ins.shift_n,
+                             address);
+        } else {
+          address=datapath.r[ins.Rn];
+          System.out.printf("address=r%d(0x%08x)\n",
+                              ins.Rn,datapath.r[ins.Rn]);
+        }
+        int data=datapath.readMem4(address);
+        if(ins.Rd==15) {
+          if(parse(address,0,2)==0b00) {
+            datapath.LoadWritePC(data);
+          } else {
+            throw new Unpredictable("Unaligned address");
+          }
+        } else {
+          System.out.printf(" r%d=0x%08x\n",ins.Rd,data);
+          datapath.r[ins.Rd]=data;
+        }
+      }
+    }
+  },
+  CBZ {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.InITBlock()) throw new Unpredictable(); //This is specified in the encoding-specific operations
+      System.out.printf("ins.nonzero: %s r%d: 0x%08x\n", ins.nonzero?"true":"false",ins.Rn, datapath.r[ins.Rn]);
+      if(ins.nonzero!=(datapath.r[ins.Rn]==0)) {
+        System.out.println("Taking branch");
+        datapath.BranchWritePC(datapath.r[15]+ins.imm);
+      } else {
+        System.out.println("Not taking branch");
       }
     }
   },

@@ -13,7 +13,13 @@ public class Emulator {
   public static void main(String args[]) throws IOException {
     Thumb2Decode decode=new Thumb2Decode();
     Datapath datapath=new Datapath();
-    datapath.addDevice(new ReadOnlyMemory(0x00000000,0x80000));  //Main Flash
+    int[][] GPIOinputData=new int[][] {
+      //Cycle 0 1 2 3 4 5 
+      {     0,0,0,(1<<10),0,0,0}
+    };
+    ReadOnlyMemory MainFlash=new ReadOnlyMemory(0x00000000,0x80000);
+    MainFlash.poke(0x2FC,0x43218765); //Temporarily force CRP3
+    datapath.addDevice(MainFlash);  //Main Flash
     datapath.addDevice(new ReadOnlyMemory(0x1fff0000,0x10000,"/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/bootstrap.ofs0.bin")); //Boot ROM 
     datapath.addDevice(new RandomAccessMemory(0x10000000,0x10000)); //Main SRAM
     datapath.addDevice(new RandomAccessMemory(0x20000000, 0x8000)); //Peripheral SRAM
@@ -22,7 +28,7 @@ public class Emulator {
     datapath.addDevice(new SystemControlBlock());
     datapath.addDevice(new Peripheral("ADC",0x40034000));
     datapath.addDevice(new Watchdog());
-    datapath.addDevice(new GPIO(datapath));
+    datapath.addDevice(new GPIO(datapath,GPIOinputData));
     datapath.addDevice(new UART(0,0x4000C000,datapath));
     datapath.addDevice(new UART(1,0x40010000,datapath));
     datapath.addDevice(new UART(2,0x40098000,datapath));
@@ -32,6 +38,8 @@ public class Emulator {
     datapath.addDevice(new Timer(1,0x40008000,datapath));
     datapath.addDevice(new Timer(2,0x40090000,datapath));
     datapath.addDevice(new Timer(3,0x40094000,datapath));
+    datapath.addDevice(new Peripheral("EMC",0x2009C000));
+    datapath.addDevice(new PinConnect());
     List<String> disasmLines=Files.readAllLines(Paths.get("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","bootstrap.disasm"),Charset.forName("UTF-8"));
     Map<Integer,String> disasmAddrLines=new HashMap<Integer,String>();
     for(String line:disasmLines) {
@@ -50,6 +58,9 @@ public class Emulator {
         if(disasmAddrLines.containsKey(datapath.ins.pc)) {
           System.out.println(" "+disasmAddrLines.get(datapath.ins.pc));
         }
+        if(datapath.ins!=null && datapath.ins.pc==0x1fff003c) {
+          System.out.println("Breakpoint");
+        }
         datapath.ins.execute(datapath);
         if(datapath.ins!=null && datapath.ins.op!=Operation.IT) datapath.shiftIT();
       }
@@ -58,9 +69,6 @@ public class Emulator {
       }
       datapath.flush=false;
       // decode
-      if(datapath.cycles==409) {
-        System.out.println("stop");
-      }
       if(datapath.insDataValid) {
         System.out.println("=== Decode ===");
         datapath.ins=decode.decode(datapath.insData,datapath.r[15]);
