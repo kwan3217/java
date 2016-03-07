@@ -17,7 +17,7 @@ public class Emulator {
       //Cycle 0 1 2 3 4 5 
       {     0,0,0,(1<<10),0,0,0}
     };
-    ReadOnlyMemory MainFlash=new ReadOnlyMemory(0x00000000,0x80000);
+    ReadOnlyMemory MainFlash=new ReadOnlyMemory(0x00000000,0x80000,"/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/FW.SFE");
     MainFlash.poke(0x2FC,0x43218765); //Temporarily force CRP3
     datapath.addDevice(MainFlash);  //Main Flash
     datapath.addDevice(new ReadOnlyMemory(0x1fff0000,0x10000,"/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/bootstrap.ofs0.bin")); //Boot ROM 
