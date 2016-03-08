@@ -286,8 +286,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
       ins.imm=0; 
       len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
       len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 4;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1, 0,len));bitpos+=len; //imm4
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 4;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1, 0,len));bitpos+=len; //imm4
       return true;
     }    
   },
@@ -433,7 +433,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       ins.imm=parse(IR,8,1) << 14 | parse(IR,0,8);
       ins.UnalignedAllowed=false;
-      if(BitCount(ins.imm)<2) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 1 or 0 registers, it's UNPREDICTABLE
+      if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 1 or 0 registers, it's UNPREDICTABLE
       return true;
     }
   },
@@ -915,6 +915,93 @@ public enum Thumb2DecodeLine implements DecodeLine {
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(IR,9,len));bitpos+=len; //i
       return true;
     }
+  },
+  ADDspimmT1("1010/1/ddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rd=parse(IR,8,3);
+      ins.setflags=SetFlags.FALSE;
+      ins.imm=parse(IR,0,8);
+      return true;
+    }
+  },
+  ADDspimmT2("1011/0000/0/iiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rd=13;
+      ins.setflags=SetFlags.FALSE;
+      ins.imm=parse(IR,0,7)<<2;
+      return true;
+    }
+  },
+  ADDspimmT3("11110/i/0/1000/S/1101//0/iii/dddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2, 8,4);
+      boolean S=parseBit(hw1,4);
+      if(ins.Rd==0b1111 && S) return false; //SEE CMN (immediate)
+      ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
+      int bitpos=0;
+      int len=1;
+      ins.imm=0; 
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      ins.imm=Datapath.ThumbExpandImm(ins.imm,false).result;
+      if(ins.Rd==15 && !S) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  ADDspimmT4("11110/i/1/0000/0/1101//0/iii/dddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2, 8,4);
+      ins.setflags=SetFlags.FALSE;
+      int bitpos=0;
+      int len=1;
+      ins.imm=0; 
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      if(ins.Rd==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  ASRimmT1("000/10/iiiii/mmm/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=parse(IR,6,5);
+      ins.Rd=parse(IR,0,3);
+      ins.Rm=parse(IR,3,3);
+      ins.setflags=SetFlags.NOT_IN_IT;
+      DecodeShiftReturn r=DecodeImmShift(0b10,ins.imm);
+      ins.shift_n=r.shift_n;
+      ins.shift_t=r.shift_t;
+      return true;
+    }    
+  },
+  ASRimmT2("11101/01/0010/S/1111//o/iii/dddd/ii/10/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2,8,4);
+      ins.Rm=parse(hw2,0,4);
+      boolean S=parseBit(hw1,4);
+      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
+      DecodeShiftReturn r=DecodeImmShift(0b10,ins.imm);
+      ins.shift_n=r.shift_n;
+      ins.shift_t=r.shift_t;
+      if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }    
+  },
+  BLXT1("010001/11/1/mmmm/ooo") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rm=parse(IR,3,4);
+      if(ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
+      // TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
+      return true;
+    }    
   },
   UNDEFINEDT1("1111/1111/1111/1111") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {

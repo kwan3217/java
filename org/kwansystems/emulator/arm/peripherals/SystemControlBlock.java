@@ -3,6 +3,7 @@ package org.kwansystems.emulator.arm.peripherals;
 import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
 import org.kwansystems.emulator.arm.DeviceRegister;
+import org.kwansystems.emulator.arm.Emulator;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
 
@@ -23,13 +24,31 @@ public class SystemControlBlock extends Peripheral {
     EMCCLKSEL  (RW,0x100),
     CCLKSEL    (RW,0x104,1),
     USBCLKSEL  (RW,0x108),
+    CLKSRCSEL  (RW,0x10C),
     PCLKSEL    (RW,0x1A8),
     SPIFICLKSEL(RW,0x1B4),
     EXTINT     (RW,0x140),
     EXTMODE    (RW,0x148),
     EXTPOLAR   (RW,0x14C),
     RSID       (RW,0x180),
-    RSTCON0    (RW,0x1CC),
+    RSTCON     (RW,0x1CC) {
+      @Override
+      public void write(int Lval) {
+        int oldVal=val;
+        val=Lval;
+        for(int i=0;i<32;i++) {
+          if((oldVal & (1<<i))!=(val & (1<<i))) {
+            boolean inReset=(val & (1<<i))!=0;
+            if(inReset) {
+              System.out.printf("Putting %s into reset\n", Emulator.resetArray0[i].toString());
+            } else {
+              System.out.printf("Pulling %s out of reset\n", Emulator.resetArray0[i].toString());
+            }
+            Emulator.resetArray0[i].reset(inReset);
+          }
+        }
+      }
+    },
     RSTCON1    (RW,0x1D0),
     EMCDLYCTL  (RW,0x1DC),
     EMCCAL     (RW,0x1E0),
@@ -45,7 +64,8 @@ public class SystemControlBlock extends Peripheral {
     MATRIXARB  (RW,0x188), //Documented in UM10562  2.5.1
     SCBCRP     (RW,0x184), //Undocumented, seems to be related to CRP. Maybe a write-once register?
     SysCtl1e4  (RO,0x1e4,3), //Undocumented, seems to be related to EMC. Lower two bits describe width of EMC bus
-    SysCtl3C0  (RW,0x3C0);
+    SysCtl3C0  (RW,0x3C0),
+    SysCtl1fc  (WO,0x1fc);
 
     //Register boilerplate
     public int ofs;
@@ -76,7 +96,8 @@ public class SystemControlBlock extends Peripheral {
     super("SystemControlBlock",0x400FC000);
     setupRegs(Registers.values());
   }
-  public void reset() {
-    reset(Registers.values());
+  @Override
+  public void reset(boolean inReset) {
+    reset(inReset,Registers.values());
   }
 }

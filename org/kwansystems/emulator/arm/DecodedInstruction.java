@@ -14,5 +14,6 @@ public class DecodedInstruction {
   SetFlags setflags;
   int mask, firstcond; //used in IT instruction
   int pc; //pc of this instruction, used for reporting position of errors
+  boolean is32;
   void execute(Datapath datapath) {op.execute(datapath, this);};
 }

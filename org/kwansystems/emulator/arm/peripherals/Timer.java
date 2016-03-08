@@ -75,7 +75,7 @@ public class Timer extends Peripheral {
     super.write(rel_addr, bytes, value);
   }
   @Override
-  public void reset() {
-    reset(Registers.values());
+  public void reset(boolean inReset) {
+    reset(inReset,Registers.values());
   }
 }

@@ -71,7 +71,9 @@ public class Thumb2Decode extends Decode {
         return null;
       }
     }
-    return super.decode(IR, pc-(thumb32?4:2));
+    DecodedInstruction result=super.decode(IR, pc-(thumb32?4:2));
+    result.is32=thumb32;
+    return result;
   }
   /** Only for human consumption, allows entry of instruction data in the same form that 
    * assembly listings display it

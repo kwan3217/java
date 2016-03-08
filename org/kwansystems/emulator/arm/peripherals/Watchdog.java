@@ -5,6 +5,7 @@ import static org.kwansystems.emulator.arm.RegisterDirection.*;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
+import org.kwansystems.emulator.arm.peripherals.LockBlock.Registers;
 
 public class Watchdog extends Peripheral {
   public enum Registers implements DeviceRegister {
@@ -41,8 +42,8 @@ public class Watchdog extends Peripheral {
   }
   //Boilerplate continues
   @Override
-  public void reset() {
-    reset(Registers.values());
+  public void reset(boolean inReset) {
+    reset(inReset,Registers.values());
   }
   //End boilerplate
   public Watchdog() {

@@ -79,7 +79,7 @@ public class PinConnect extends Peripheral {
   private static int regOffset=0;
   public enum Registers implements DeviceRegister {
     IOCON_P0_00(RW,PinType.D,new String[] {"P0[0]","CAN_RD1","U3_TXD","I2C1_SDA","U0_TXD"}),
-    IOCON_P0_01(RW,PinType.D),
+    IOCON_P0_01(RW,PinType.D,new String[] {"P0[1]","CAN_TD1","U3_RXD","I2C1_SCL","U0_RXD"}),
     IOCON_P0_02(RW,PinType.D),
     IOCON_P0_03(RW,PinType.D),
     IOCON_P0_04(RW,PinType.D),
@@ -283,12 +283,13 @@ public class PinConnect extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public void reset() {
-    reset(Registers.values());
+  @Override
+  public void reset(boolean inReset) {
+    reset(inReset,Registers.values());
   }
   public PinConnect() {
     super("Pin Connect",0x4002C000,0x4000);
     setupRegs(Registers.values());
-    reset();
+    reset(false); //Bring the part out of reset
   }
 }

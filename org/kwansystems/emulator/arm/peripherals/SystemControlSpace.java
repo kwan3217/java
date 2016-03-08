@@ -6,10 +6,9 @@ import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
 
-public class LockBlock extends Peripheral {
+public class SystemControlSpace extends Peripheral {
   public enum Registers implements DeviceRegister {
-    LOCK00 (RW,0x000), 
-    LOCK10 (RW,0x010);
+    VTOR    (RW,0x08,0x1FFF0000); 
 
     //Register boilerplate
     public int ofs;
@@ -36,8 +35,8 @@ public class LockBlock extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public LockBlock() {
-    super("LockBlock",0x00200000,0x10000);
+  public SystemControlSpace() {
+    super("SystemControlSpace",0xE000ED00,0x90);
     setupRegs(Registers.values());
   }
   @Override

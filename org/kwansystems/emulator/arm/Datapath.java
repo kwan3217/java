@@ -76,7 +76,13 @@ public class Datapath {
   };
   public void writeMem4(int address, int value) {writeMem(address,4,value);} 
   public void writeMem2(int address, int value) {writeMem(address,2,value);} 
-  public void writeMem1(int address, int value) {writeMem(address,1,value);} 
+  public void writeMem1(int address, int value) {writeMem(address,1,value);}
+  public void reset() {
+    System.out.println("==Reset==");
+    int VTOR=readMem4(0xE000ED08);
+    r[13]=readMem4(VTOR);
+    BranchWritePC(readMem4(VTOR+4));
+  }
   public boolean shouldSetFlags(SetFlags setflags) {
     switch(ins.setflags) {
       case TRUE:
@@ -129,14 +135,20 @@ public class Datapath {
   public void ALUWritePC(int value) {
     BranchWritePC(value);
   }
+  public void LoadWritePC(int value) {
+    BXWritePC(value);
+  }
   public void BXWritePC(int value) {
     // TODO - This code is from an older version of the book. It should work for now.
     if(value %2==0) throw new Unpredictable("Going to ARM state on a machine that doesn't support it"); //In a machine that handled ARM, we would set the T bit with bit 0 here
-    System.out.printf("LoadWritePC(%08x)\n",value);
+    System.out.printf("BXWritePC(%08x)\n",value);
     BranchWritePC(value & ~1);
   }
-  public void LoadWritePC(int value) {
-    BXWritePC(value);
+  public void BLXWritePC(int value) {
+    // TODO - This code is from an older version of the book. It should work for now.
+    if(value %2==0) throw new Unpredictable("Going to ARM state on a machine that doesn't support it"); //In a machine that handled ARM, we would set the T bit with bit 0 here
+    System.out.printf("BLXWritePC(%08x)\n",value);
+    BranchWritePC(value & ~1);
   }
   public void StartITBlock(int firstcond, int mask) {
     //The condition codes are set up such that the high three bits specifies a pattern of flags,
@@ -179,7 +191,7 @@ public class Datapath {
   public boolean ConditionPassed(ConditionCode cond) {
     if(cond==ConditionCode.Thumb) {
       if(!InITBlock()) {
-        System.out.println("No IT block in effect");
+//        System.out.println("No IT block in effect");
         return true;
       }
       ConditionCode localCond=ConditionCode.enumValues[parse(getIT(),4,4)];
@@ -189,11 +201,12 @@ public class Datapath {
       return cond.shouldExecute(APSR);
     }
   }
-  public int ThumbExpandImm(int imm) {
-    return ThumbExpandImmWithC(imm).result;
-  }
   public ResultWithCarry ThumbExpandImmWithC(int imm) {
-    System.out.printf("ThumbExpandImmWithC(0x%03x): ",imm);
+    return ThumbExpandImm(imm,APSR_C());
+  }
+  //Pseudocode functions which don't rely on datapath state, but are used in execute stage
+  public static ResultWithCarry ThumbExpandImm(int imm, boolean b) {
+    System.out.printf("ThumbExpandImm(0x%03x): ",imm);
     if(parse(imm,10,2)==0b00) {
       ResultWithCarry r=new ResultWithCarry();
       int imm8=parse(imm,0,8);
@@ -218,7 +231,7 @@ public class Datapath {
           System.out.printf("xx=0x%02x xx|xx|xx|xx 0x%08x\n", imm8, r.result);
           break;
       }
-      r.carry_out=APSR_C();
+      r.carry_out=b;
       return r;
     } else {
       int unrotated_value=1<<7 | parse(imm,0,7);
@@ -228,7 +241,6 @@ public class Datapath {
       return r;       
     }
   }
-  //Pseudocode functions which don't rely on datapath state, but are used in execute stage
   public static int Shift(int value, SRType type, int amount, boolean carry_in) {
     return Shift_C(value,type,amount,carry_in).result;
   }
@@ -240,6 +252,20 @@ public class Datapath {
           r=new ResultWithCarry(value,carry_in);
         } else {
           r=LSL_C(value,amount);
+        }
+        return r;
+      case LSR:
+        if(amount==0) {
+          r=new ResultWithCarry(value,carry_in);
+        } else {
+          r=LSR_C(value,amount);
+        }
+        return r;
+      case ASR:
+        if(amount==0) {
+          r=new ResultWithCarry(value,carry_in);
+        } else {
+          r=ASR_C(value,amount);
         }
         return r;
       case NONE: //Intentionally catches case NONE:
@@ -273,6 +299,18 @@ public class Datapath {
   public static int LSR(int x, int n) {
     if(n==0) return x;
     return LSR_C(x,n).result;
+  }
+  public static ResultWithCarry ASR_C(int x, int n) {
+    return new ResultWithCarry(x >> n, //Arithmetic-shift the word the given number of bits
+                               (x & (1<<(n-1)))!=0); //Dig out the carry bit, which is the bit to the right of the lowest bit in the result.
+                                                      //IE shifting 1 bit  means that the        rightmost (least significant, bit 0) bit is it,
+                                                      //   shifting 2 bits means that the second rightmost bit (bit 1), etc.
+                                                      //Therefore select bit n-1 by calculating 1<<(n-1) as the mask, ANDing with the 
+                                                      //original number, and returning true or false if the result is nonzero or zero.
+  }
+  public static int ASR(int x, int n) {
+    if(n==0) return x;
+    return ASR_C(x,n).result;
   }
   public static ResultWithCarry ROR_C(int x, int n) {
     int m=n%32;

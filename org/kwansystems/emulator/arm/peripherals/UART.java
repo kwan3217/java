@@ -6,6 +6,7 @@ import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
+import org.kwansystems.emulator.arm.peripherals.LockBlock.Registers;
 
 public class UART extends Peripheral {
   //All this state being static is an ugly hack, forced on us by the fact that the elements
@@ -130,9 +131,8 @@ public class UART extends Peripheral {
     super.write(rel_addr, bytes, value);
   }
   @Override
-  public void reset() {
-    // TODO Auto-generated method stub
-    
+  public void reset(boolean inReset) {
+    reset(inReset,Registers.values());
   }
 
 }

@@ -5,6 +5,8 @@ import static org.kwansystems.emulator.arm.Datapath.*;
 
 import org.kwansystems.emulator.arm.Datapath.AddWithCarryReturn;
 
+import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
+
 public enum Operation {
   /*
   LSLimm {
@@ -74,7 +76,7 @@ public enum Operation {
         //From here on is not encoding-specific
         int base=ins.pc+4 & ~(0x03);
         int address=ins.add?base+ins.imm:base-ins.imm;
-        System.out.printf("Using pc%c%d-0x%08x as address\n",ins.add?'+':'-',ins.imm,address);
+        System.out.printf("Using pc%c%d=0x%08x as address\n",ins.add?'+':'-',ins.imm,address);
         int data=datapath.readMem4(address);
         if(ins.Rd==15) {
           if((address & 0b11) != 0b00) throw new Unpredictable("Address is not word-aligned");
@@ -181,7 +183,11 @@ public enum Operation {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       if(datapath.ConditionPassed(ins.cond)) {
         //TODO - pick up some UNPREDICTABLE stuff from the encodings
-        datapath.BranchWritePC(datapath.r[15]+ins.imm);
+        int pc=datapath.r[15];
+        if(ins.is32) {pc-=2;}
+        int target=pc+ins.imm;
+        System.out.printf("Jumping to r15(0x%08x)+0x%08x=0x%08x\n",datapath.r[15],ins.imm,target);
+        datapath.BranchWritePC(target);
       }
     }
   },
@@ -212,7 +218,7 @@ public enum Operation {
   SUBimm {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       //Pick up things that couldn't be done in decode
-      if(ins.thumbExpand) ins.imm=datapath.ThumbExpandImm(ins.imm);
+      if(ins.thumbExpand) ins.imm=datapath.ThumbExpandImm(ins.imm,false).result;
       if(datapath.ConditionPassed(ins.cond)) {
         System.out.printf("Second argument=0x%08x\n",ins.imm);
         AddWithCarryReturn r=AddWithCarry(datapath.r[ins.Rn],~ins.imm,true); //Implement subtract using just the adder
@@ -232,7 +238,26 @@ public enum Operation {
   SUBreg {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       if(datapath.ConditionPassed(ins.cond)) {
-        throw new RuntimeException("Todo");// TODO
+        int shifted=Shift(datapath.r[ins.Rm],ins.shift_t, ins.shift_n,datapath.APSR_C());
+        System.out.printf("Right argument=r%d(0x%08x) %s %d=0x%08x\n", ins.Rm,datapath.r[ins.Rm],ins.shift_t.toString(),ins.shift_n,shifted);
+        AddWithCarryReturn r=AddWithCarry(datapath.r[ins.Rn],~shifted,true);
+        System.out.printf("r%d=r%d(0x%08x) - 0x%08x=0x%08x", ins.Rd,ins.Rn,datapath.r[ins.Rn],shifted,r.result);
+        if(ins.Rd==15) {
+          datapath.ALUWritePC(r.result); //setflags is always FALSE here
+        } else {
+          datapath.r[ins.Rd]=r.result;
+          if(datapath.shouldSetFlags(ins.setflags)) {
+            datapath.APSR_setN(parseBit(r.result,31));
+            datapath.APSR_setZ(r.result==0);
+            datapath.APSR_setC(r.carry_out);
+            datapath.APSR_setV(r.overflow);
+            System.out.printf(", N=%d", datapath.APSR_N()?1:0);
+            System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
+            System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+            System.out.printf(", V=%d\n", datapath.APSR_V()?1:0);
+          }
+        }
+        System.out.println();
       }
     }
   },
@@ -585,7 +610,7 @@ public enum Operation {
         datapath.APSR_setC(r.carry_out);
         System.out.printf(", N=%d", datapath.APSR_N()?1:0);
         System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
-        System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+        System.out.printf(", C=%d\n", datapath.APSR_C()?1:0);
       }
     }
   },
@@ -654,6 +679,54 @@ public enum Operation {
         datapath.BranchWritePC(datapath.r[15]+ins.imm);
       } else {
         System.out.println("Not taking branch");
+      }
+    }
+  },
+  ADDspimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        AddWithCarryReturn r=AddWithCarry(datapath.r[13],ins.imm,false);
+        System.out.printf("r%d=r%d(0x%08x) + 0x%08x=0x%08x", ins.Rd,13,datapath.r[13],ins.imm,r.result);
+        datapath.r[ins.Rd]=r.result;
+        if(datapath.shouldSetFlags(ins.setflags)) {
+          datapath.APSR_setN(parseBit(r.result,31));
+          datapath.APSR_setZ(r.result==0);
+          datapath.APSR_setC(r.carry_out);
+          datapath.APSR_setV(r.overflow);
+          System.out.printf(", N=%d", datapath.APSR_N()?1:0);
+          System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
+          System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+          System.out.printf(", V=%d\n", datapath.APSR_V()?1:0);
+        }
+      }
+    }
+  },
+  ASRimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        ResultWithCarry r=Shift_C(datapath.r[ins.Rm],SRType.ASR,ins.shift_n,datapath.APSR_C());
+        System.out.printf("r%d=r%d(0x%08x) >> %d=0x%08x", ins.Rd,ins.Rm,datapath.r[ins.Rm],ins.imm,r.result);
+        datapath.r[ins.Rd]=r.result;
+        if(datapath.shouldSetFlags(ins.setflags)) {
+          datapath.APSR_setN(parseBit(r.result,31));
+          datapath.APSR_setZ(r.result==0);
+          datapath.APSR_setC(r.carry_out);
+          System.out.printf(", N=%d", datapath.APSR_N()?1:0);
+          System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
+          System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+        }
+        System.out.println();
+      }
+    }
+  },
+  BLX {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int target=datapath.r[ins.Rm];
+        int next_ins_addr=datapath.r[15]-2;
+        datapath.r[14]=next_ins_addr | 1;
+        System.out.printf("lr=pc=0x%08x\n",datapath.r[14],ins.imm>=0?"+":"",ins.imm);
+        datapath.BLXWritePC(target);
       }
     }
   },
