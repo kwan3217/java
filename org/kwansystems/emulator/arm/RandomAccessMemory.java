@@ -6,8 +6,9 @@ public class RandomAccessMemory extends ReadOnlyMemory {
   }
   @Override
   public void write(int rel_addr, int bytes, int value) {
-    for(int i=0;i<bytes;i++) {
-      mem[rel_addr+i]=(byte)((value>>(8*i)) & 0xFF);
-    }
+    poke(rel_addr,bytes,value);
+  }
+  public final void write(int rel_addr, int value) {
+    write(rel_addr,4,value);
   }
 }

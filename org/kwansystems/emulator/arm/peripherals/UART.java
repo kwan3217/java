@@ -17,62 +17,58 @@ public class UART extends Peripheral {
   //can let the backing store handle the other side. Finally, RBR() and THR() are going to end up
   //complicated. However, that means that they are backed by functions, and we can use the backing store
   //for UDLL. The RBR() and THR() functions will need access to the cycle counter at least. 
-  public static int[] DLM=new int[5];
-  public static int activePort;
-  public static Datapath datapath;
-  public static boolean DLAB() {
-    //TODO - dig the DLAB out of the correct slot in memory
-    //return (mem[ULCR.getOfs()] & 1<<7)!=0;
-    return false;
+  private boolean DLAB() {
+    return (read(Registers.ULCR.getOfs()) & 1<<7)!=0;
   }
-  public static int RBR() {
+  private int DLM;
+  private int RBR() {
     //TODO - return the right character at the right time, based
     //       on the cycle counter.
     int val=0;
     System.out.printf("Reading URBR, value 0x%08x\n",val);
     return val;
   }
-  public static void THR(int val) {
+  private void THR(int val) {
     //TODO - do something with the value that is written
     System.out.printf("Writing UTHR, value 0x%08x\n",val);
   }
-  public int port;
+  private final int port;
   public enum Registers implements DeviceRegister {
-    UDLL     (RW,0x000) {
+    UDLL     (RW,0x000) { //This also implements URBR (on read)/UTHR (on write)
       @Override
-      public int read() {
-        if(DLAB()) {
-          return super.read();
+      public int read(Peripheral uart) {
+        if(((UART)uart).DLAB()) {
+          return super.read(uart);
         } else {
-          return RBR();
+          return ((UART)uart).RBR();
         }
       }
       @Override
-      public void write(int val) {
-        if(DLAB()) {
-          super.write(val);
+      public void write(Peripheral uart, int val) {
+        if(((UART)uart).DLAB()) {
+          super.write(uart,val);
         } else {
-          THR(val);
+          ((UART)uart).THR(val);
         }
       }
-    }, //URBR(read)/UTHR(write) when DLAB=0
-    UIER     (RW,0x004) {
+    }, 
+    UIER     (RW,0x004) { //This also implements UDLM
       @Override
-      public int read() {
-        if(DLAB()) {
-          System.out.printf("Reading UDLM, value 0x%08x\n",DLM[activePort]);
-          return DLM[activePort];
+      public int read(Peripheral uart) {
+        if(((UART)uart).DLAB()) {
+          System.out.printf("Reading UDLM, value 0x%08x\n",((UART)uart).DLM);
+          return ((UART)uart).DLM;
         } else {
-          return super.read();
+          return super.read(uart);
         }
       }
       @Override
-      public void write(int val) {
-        if(DLAB()) {
+      public void write(Peripheral uart, int val) {
+        if(((UART)uart).DLAB()) {
           System.out.printf("Writing UDLM, value 0x%08x\n",val);
-          DLM[activePort]=val;
+          ((UART)uart).DLM=val;
         } else {
-          super.write(val);
+          super.write(uart,val);
         }
       }
     }, //UDLM(r/w)   when DLAB=1
@@ -88,45 +84,43 @@ public class UART extends Peripheral {
     UFDR     (RW,0x028),
     UTER     (RW,0x030);
     //Register boilerplate
-    public int ofs;
-    public int val, resetVal;
-    public RegisterDirection dir;
+    public final int ofs;
+    public final int resetVal;
+    public final RegisterDirection dir;
     private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
     private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
     @Override
-    public void reset() {val=resetVal;}
+    public void reset(Peripheral uart) {uart.write(ofs,resetVal);}
     @Override
-    public int read() {
+    public int read(Peripheral uart) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
+      int val=uart.read(ofs, 4);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
     @Override
-    public void write(int Lval) {
+    public void write(Peripheral uart, int Lval) {
       if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
       System.out.printf("Writing %s, value 0x%08x\n",toString(),Lval);
-      val=Lval;
+      uart.write(ofs, Lval);
     }
     @Override
     public int getOfs() {return ofs;}
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public UART(int Lport, int base, Datapath Ldatapath) {
+  public UART(int Lport, int base) {
     super(String.format("UART%d", Lport),base,0x4000);
     port=Lport;
-    datapath=Ldatapath;
     setupRegs(Registers.values());
   }
   @Override
   public int read(int rel_addr, int bytes) {
-    activePort=port;
     System.out.printf("UART%d ",port);
     return super.read(rel_addr, bytes);
   }
   @Override
   public void write(int rel_addr, int bytes, int value) {
-    activePort=port;
     System.out.printf("UART%d ",port);
     super.write(rel_addr, bytes, value);
   }
@@ -134,5 +128,4 @@ public class UART extends Peripheral {
   public void reset(boolean inReset) {
     reset(inReset,Registers.values());
   }
-
 }

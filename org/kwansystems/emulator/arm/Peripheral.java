@@ -17,7 +17,7 @@ public class Peripheral extends RandomAccessMemory {
   @Override
   public int read(int rel_addr, int bytes) {
     if(readregs.containsKey(rel_addr)) {
-      return readregs.get(rel_addr).read();
+      return readregs.get(rel_addr).read(this);
     } else if(writeregs.containsKey(rel_addr)) {
       throw new RuntimeException("Reading from a write-only register "+writeregs.get(rel_addr).toString());
     } else {
@@ -29,7 +29,7 @@ public class Peripheral extends RandomAccessMemory {
   @Override
   public void write(int rel_addr, int bytes, int value) {
     if(writeregs.containsKey(rel_addr)) {
-      writeregs.get(rel_addr).write(value);
+      writeregs.get(rel_addr).write(this,value);
     } else if(readregs.containsKey(rel_addr)) {
       throw new RuntimeException("Writing to a read-only register "+readregs.get(rel_addr).toString());
     } else {
@@ -38,7 +38,7 @@ public class Peripheral extends RandomAccessMemory {
     }
   }
   public void reset(boolean inReset, DeviceRegister[] registers) {
-    if(!inReset) for(DeviceRegister r:registers) r.reset();
+    if(!inReset) for(DeviceRegister r:registers) r.reset(this);
   }
   public void reset(boolean inReset) {}
   protected void setupRegs(DeviceRegister[] registers) {

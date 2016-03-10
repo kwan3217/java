@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class ReadOnlyMemory implements MemoryMappedDevice {
-  protected byte mem[];
+  private byte mem[];
   protected int base;
   public ReadOnlyMemory(int Lbase, int size) {
     base=Lbase;
@@ -23,6 +23,9 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
     System.out.printf("readMem(%08x)=%0"+String.format("%d", bytes*2)+"x\n",rel_addr+base,result);
     return result; 
   };
+  public final int read(int rel_addr) {
+    return read(rel_addr,4);
+  }
   @Override
   public void write(int rel_addr, int bytes, int value) {
     throw new IllegalArgumentException("Writing to ROM");
@@ -46,11 +49,16 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
     }
     inf.close();
   }
-  /** Pokes a value into the memory, despite the fact that it is read-only */
-  public void poke(int address, int val) {
-    for(int i=0;i<4;i++) {
+  /** Pokes a value into the memory, despite the fact that it is read-only. This is used by 
+   * RAM as the actual write mechanism, and is intended to be lower-level IE less 
+   * debugging/side effects */
+  public void poke(int address, int bytes, int val) {
+    for(int i=0;i<bytes;i++) {
       mem[address]=(byte)((val >> (i*8)) & 0xFF);
       address++;
     }
+  }
+  public void poke(int address, int val) {
+    poke(address,4,val);
   }
 }
