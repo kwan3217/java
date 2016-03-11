@@ -33,9 +33,10 @@ public class SystemControlBlock extends Peripheral {
     RSID       (RW,0x180),
     RSTCON     (RW,0x1CC) {
       @Override
-      public void write(int Lval) {
-        int oldVal=val;
-        val=Lval;
+      public void write(Peripheral p, int Lval) {
+        int oldVal=p.read(ofs);
+        int val=Lval;
+        p.write(ofs,val);
         for(int i=0;i<32;i++) {
           if((oldVal & (1<<i))!=(val & (1<<i))) {
             boolean inReset=(val & (1<<i))!=0;
@@ -74,18 +75,19 @@ public class SystemControlBlock extends Peripheral {
     private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
     private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
     @Override
-    public void reset() {val=resetVal;}
+    public void reset(Peripheral p) {p.poke(ofs, resetVal);}
     @Override
-    public int read() {
+    public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
+      int val=p.read(ofs);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
     @Override
-    public void write(int Lval) {
+    public void write(Peripheral p, int val) {
       if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
-      System.out.printf("Writing %s, value 0x%08x\n",toString(),Lval);
-      val=Lval;
+      System.out.printf("Writing %s, value 0x%08x\n",toString(),val);
+      p.poke(ofs,val);
     }
     @Override
     public int getOfs() {return ofs;}

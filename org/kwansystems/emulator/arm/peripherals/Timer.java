@@ -8,13 +8,8 @@ import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
 
 public class Timer extends Peripheral {
-  //All this state being static is an ugly hack, forced on us by the fact that the elements
-  //of the Registers enum only have access to the static fields of UART. We therefore set
-  //the activePort static field each time we read or write. Timing will need access to the 
-  //datapath cycle count
-  public static int activePort;
-  public static Datapath datapath;
-  public int port;
+  public final int port;
+  public final Datapath datapath;
   public enum Registers implements DeviceRegister {
     TIR      (RW,0x000), // TODO - Lots of these will need to be functions of the datapath cycle count
     TTCR     (RW,0x004),
@@ -31,25 +26,27 @@ public class Timer extends Peripheral {
     TCR1     (RO,0x030),
     TEMR     (RW,0x03C),
     TCTCR    (RW,0x070);
+
     //Register boilerplate
-    public int ofs;
-    public int val, resetVal;
-    public RegisterDirection dir;
+    public final int ofs;
+    public final int resetVal;
+    public final RegisterDirection dir;
     private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
     private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
     @Override
-    public void reset() {val=resetVal;}
+    public void reset(Peripheral p) {p.poke(ofs, resetVal);}
     @Override
-    public int read() {
+    public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
+      int val=p.read(ofs);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
     @Override
-    public void write(int Lval) {
+    public void write(Peripheral p, int val) {
       if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
-      System.out.printf("Writing %s, value 0x%08x\n",toString(),Lval);
-      val=Lval;
+      System.out.printf("Writing %s, value 0x%08x\n",toString(),val);
+      p.poke(ofs,val);
     }
     @Override
     public int getOfs() {return ofs;}
@@ -61,18 +58,6 @@ public class Timer extends Peripheral {
     port=Lport;
     datapath=Ldatapath;
     setupRegs(Registers.values());
-  }
-  @Override
-  public int read(int rel_addr, int bytes) {
-    activePort=port;
-    System.out.printf("Timer%d ",port);
-    return super.read(rel_addr, bytes);
-  }
-  @Override
-  public void write(int rel_addr, int bytes, int value) {
-    activePort=port;
-    System.out.printf("Timer%d ",port);
-    super.write(rel_addr, bytes, value);
   }
   @Override
   public void reset(boolean inReset) {

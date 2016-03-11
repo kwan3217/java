@@ -248,11 +248,11 @@ public class PinConnect extends Peripheral {
     IOCON_P5_02(RW,PinType.D),
     IOCON_P5_03(RW,PinType.D),
     IOCON_P5_04(RW,PinType.D);
-    public int ofs;
-    public int val, resetVal;
-    public RegisterDirection dir;
-    public PinType pinType;
-    public String[] pinModeNames;
+    public final int ofs;
+    public final int resetVal;
+    public final RegisterDirection dir;
+    public final PinType pinType;
+    public final String[] pinModeNames;
     private Registers(RegisterDirection Ldir,int LresetVal,PinType LpinType,String[] LpinModeNames) {
       ofs=regOffset;
       regOffset+=4;
@@ -265,18 +265,19 @@ public class PinConnect extends Peripheral {
     private Registers(RegisterDirection Ldir,              PinType type) {this(Ldir,type.resetValue,type,null);}
     private Registers(RegisterDirection Ldir,              PinType type,String[] LpinModeNames) {this(Ldir,type.resetValue,type,LpinModeNames);}
     @Override
-    public void reset() {val=resetVal;}
+    public void reset(Peripheral p) {p.poke(ofs, resetVal);}
     @Override
-    public int read() {
+    public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
-      System.out.printf("Reading %s, value 0x%08x (%s)\n",toString(),val,pinType.toString(val,pinModeNames));
+      int val=p.read(ofs);
+      System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
     @Override
-    public void write(int Lval) {
+    public void write(Peripheral p, int val) {
       if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
-      System.out.printf("Writing %s, value 0x%08x (%s)\n",toString(),Lval,pinType.toString(Lval,pinModeNames));
-      val=Lval;
+      System.out.printf("Writing %s, value 0x%08x\n",toString(),val);
+      p.poke(ofs,val);
     }
     @Override
     public int getOfs() {return ofs;}

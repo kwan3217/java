@@ -35,11 +35,11 @@ public class Emulator {
     {   410+bitcycles*9,(1<<1),0,(0<<10),0,0,0}, //trailing edge data low bits (up)
   });
   public static UART[] uart=new UART[] {
-    new UART(0,0x4000C000,datapath),
-    new UART(1,0x40010000,datapath),
-    new UART(2,0x40098000,datapath),
-    new UART(3,0x4009C000,datapath),
-    new UART(4,0x400A4000,datapath)
+    new UART(0,0x4000C000),
+    new UART(1,0x40010000),
+    new UART(2,0x40098000),
+    new UART(3,0x4009C000),
+    new UART(4,0x400A4000)
   };
   public static Timer[] timer=new Timer[] {
     new Timer(0,0x40004000,datapath),

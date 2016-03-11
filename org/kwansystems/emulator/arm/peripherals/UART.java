@@ -102,7 +102,7 @@ public class UART extends Peripheral {
     public void write(Peripheral uart, int Lval) {
       if(dir==RO) throw new RuntimeException("Writing to a read-only register "+toString());
       System.out.printf("Writing %s, value 0x%08x\n",toString(),Lval);
-      uart.write(ofs, Lval);
+      uart.poke(ofs, Lval);
     }
     @Override
     public int getOfs() {return ofs;}
