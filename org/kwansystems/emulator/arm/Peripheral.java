@@ -13,7 +13,6 @@ public class Peripheral extends RandomAccessMemory {
   }
   protected Map<Integer,DeviceRegister> readregs=new HashMap<Integer,DeviceRegister>();
   protected Map<Integer,DeviceRegister> writeregs=new HashMap<Integer,DeviceRegister>();
-  
   @Override
   public int read(int rel_addr, int bytes) {
     if(readregs.containsKey(rel_addr)) {

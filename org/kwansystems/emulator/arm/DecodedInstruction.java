@@ -5,7 +5,7 @@ public class DecodedInstruction {
   Operation op;
   int opcode;
   int imm;
-  int Rm,Rn,Rd;
+  int Rm,Rn,Rd,Ra;
   ConditionCode cond=ConditionCode.Thumb;
   SRType shift_t=SRType.NONE;
   int shift_n;

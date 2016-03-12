@@ -77,12 +77,6 @@ public class Datapath {
   public void writeMem4(int address, int value) {writeMem(address,4,value);} 
   public void writeMem2(int address, int value) {writeMem(address,2,value);} 
   public void writeMem1(int address, int value) {writeMem(address,1,value);}
-  public void reset() {
-    System.out.println("==Reset==");
-    int VTOR=readMem4(0xE000ED08);
-    r[13]=readMem4(VTOR);
-    BranchWritePC(readMem4(VTOR+4));
-  }
   public boolean shouldSetFlags(SetFlags setflags) {
     switch(ins.setflags) {
       case TRUE:

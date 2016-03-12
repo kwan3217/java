@@ -11,17 +11,25 @@ import org.kwansystems.emulator.arm.peripherals.UART.Registers;
 public class GPIO extends Peripheral {
   private static int[][] inputData;
   private static int inputDataRow=0;
-
+  private static int cycles;
   private static int[] getInputData() {
-    System.out.printf("Getting GPIO state, current cycle=%d, current row %d, next row cycle=%d\n",datapath.cycles,inputDataRow,inputData[inputDataRow+1][0]);
-    while(datapath.cycles>inputData[inputDataRow+1][0]) {
+    while(inputDataRow<inputData.length-1 && cycles>inputData[inputDataRow+1][0]) {
       inputDataRow++;
-      System.out.printf("Getting GPIO state, current cycle=%d, current row %d, next row cycle=%d\n",datapath.cycles,inputDataRow,inputData[inputDataRow+1][0]);
+      if(inputDataRow<inputData.length-1) {
+        System.out.printf("Getting GPIO state, current cycle=%d, current row %d, next row cycle=%d\n",cycles,inputDataRow,inputData[inputDataRow+1][0]);
+      } else {
+        System.out.printf("On last GPIO line\n");
+      }
+    }
+    System.out.printf("Getting GPIO state, current cycle=%d, current row %d (started on cycle %d)",cycles,inputDataRow,inputData[inputDataRow][0]);
+    if(inputDataRow<inputData.length-1) {
+      System.out.printf(", next row cycle=%d\n",inputData[inputDataRow+1][0]);
+    } else {
+      System.out.printf(", last row\n");
     }
     int[] result=inputData[inputDataRow];
     return result;
   }
-  private static Datapath datapath;
   public enum Registers implements DeviceRegister {
     DIR0     (RW,0x000), //DIRx and MASKx don't need any code to support.
     MASK0    (RW,0x010),
@@ -66,14 +74,14 @@ public class GPIO extends Peripheral {
       //IF a bit not visible through MASKx, then its value will be 0.
       //Otherwise, if direction is input, the current input will be visible
       //           otherwise the last output will be visible
-      return (~(outMask) & getInputData()[port+1] | (outMask) & gpio.read(PINx.ofs)) & ~mask; 
+      return (~(outMask) & getInputData()[port+1] | (outMask) & gpio.peek(PINx.ofs)) & ~mask; 
     };
     private static void PINxwrite(Registers PINx, Peripheral gpio, int Lval) {
       int port=(PINx.ofs-0x14)/0x20;
       int dir =Registers.values()[port*5+0].read(gpio);
       int mask=Registers.values()[port*5+1].read(gpio);
-      int val=gpio.read(PINx.ofs);
-      gpio.write(PINx.ofs,(val & mask) | (Lval & ~mask)); 
+      int val=gpio.peek(PINx.ofs);
+      gpio.poke(PINx.ofs,(val & mask) | (Lval & ~mask)); 
     }
     private static int SETxread(Registers SETx, Peripheral gpio) {
       int port=(SETx.ofs-0x18)/0x20;
@@ -83,13 +91,13 @@ public class GPIO extends Peripheral {
       int port=(SETx.ofs-0x18)/0x20;
       Registers MASKx=Registers.values()[port*5+1];
       Registers PINx =Registers.values()[port*5+2];
-      gpio.write(PINx.ofs, gpio.read(PINx.ofs)|(Lval&~MASKx.read(gpio)));
+      gpio.poke(PINx.ofs, gpio.read(PINx.ofs)|(Lval&~MASKx.read(gpio)));
     }
     private static void CLRx(Registers CLRx, Peripheral gpio, int Lval) {
       int port=(CLRx.ofs-0x1C)/0x20;
       Registers MASKx=Registers.values()[port*5+1];
       Registers PINx =Registers.values()[port*5+2];
-      gpio.write(PINx.ofs, gpio.read(PINx.ofs)&~(Lval&~MASKx.read(gpio)));
+      gpio.poke(PINx.ofs, gpio.read(PINx.ofs)&~(Lval&~MASKx.read(gpio)));
     }
     //Register boilerplate
     public final int ofs;
@@ -102,7 +110,7 @@ public class GPIO extends Peripheral {
     @Override
     public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
-      int val=p.read(ofs);
+      int val=p.peek(ofs);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
@@ -121,10 +129,12 @@ public class GPIO extends Peripheral {
   public void reset(boolean inReset) {
     reset(inReset,Registers.values());
   }
-  public GPIO(Datapath Ldatapath, int[][] LinputData) {
+  public GPIO(int[][] LinputData) {
     super("GPIO",0x20098000,0x4000);
-    datapath=Ldatapath;
     inputData=LinputData;
     setupRegs(Registers.values());
+  }
+  public void tick(int pclk) {
+    cycles=pclk;
   }
 }

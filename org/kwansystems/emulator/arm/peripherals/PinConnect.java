@@ -269,7 +269,7 @@ public class PinConnect extends Peripheral {
     @Override
     public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
-      int val=p.read(ofs);
+      int val=p.peek(ofs);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }

@@ -8,6 +8,8 @@ import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
 
 public class SystemControlBlock extends Peripheral {
+  private Peripheral[] resetArray0;
+  private static Peripheral[] currentResetArray0;
   public enum Registers implements DeviceRegister {
     PLLCON0    (RW,0x080), 
     PLLCON1    (RW,0x0A0),
@@ -34,18 +36,18 @@ public class SystemControlBlock extends Peripheral {
     RSTCON     (RW,0x1CC) {
       @Override
       public void write(Peripheral p, int Lval) {
-        int oldVal=p.read(ofs);
+        int oldVal=read(p);
         int val=Lval;
-        p.write(ofs,val);
+        super.write(p, val);
         for(int i=0;i<32;i++) {
           if((oldVal & (1<<i))!=(val & (1<<i))) {
             boolean inReset=(val & (1<<i))!=0;
             if(inReset) {
-              System.out.printf("Putting %s into reset\n", Emulator.resetArray0[i].toString());
+              System.out.printf("Putting %s into reset\n", currentResetArray0[i].toString());
             } else {
-              System.out.printf("Pulling %s out of reset\n", Emulator.resetArray0[i].toString());
+              System.out.printf("Pulling %s out of reset\n", currentResetArray0[i].toString());
             }
-            Emulator.resetArray0[i].reset(inReset);
+            currentResetArray0[i].reset(inReset);
           }
         }
       }
@@ -79,7 +81,7 @@ public class SystemControlBlock extends Peripheral {
     @Override
     public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
-      int val=p.read(ofs);
+      int val=p.peek(ofs);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }
@@ -94,12 +96,23 @@ public class SystemControlBlock extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public SystemControlBlock() {
+  public SystemControlBlock(Peripheral[] LresetArray0) {
     super("SystemControlBlock",0x400FC000);
+    resetArray0=LresetArray0;
     setupRegs(Registers.values());
   }
   @Override
   public void reset(boolean inReset) {
     reset(inReset,Registers.values());
+  }
+  @Override
+  public int read(int rel_addr, int bytes) {
+    currentResetArray0=resetArray0;
+    return super.read(rel_addr, bytes);
+  }
+  @Override
+  public void write(int rel_addr, int bytes, int value) {
+    currentResetArray0=resetArray0;
+    super.write(rel_addr, bytes, value);
   }
 }

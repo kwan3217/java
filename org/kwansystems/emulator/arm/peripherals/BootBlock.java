@@ -19,7 +19,8 @@ public class BootBlock extends Peripheral {
     BOOT_SYSCTL1FC (RO,0x5e0),
     BOOT_PBOOST    (RO,0x5e4),
     BOOT5E8        (RO,0x5e8,0xFFFFFFFF), //used as a pointer in reset2_cont, but not used if value is 0xFFFFFFFF
-    BOOT_EMCDLYCTL (RO,0x5f0)
+    BOOT_EMCDLYCTL (RO,0x5f0),
+    BOOT430        (RO,0x430,(1<<17))
     ;
     //Register boilerplate
     public final int ofs;
@@ -32,7 +33,7 @@ public class BootBlock extends Peripheral {
     @Override
     public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
-      int val=p.read(ofs);
+      int val=p.peek(ofs);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }

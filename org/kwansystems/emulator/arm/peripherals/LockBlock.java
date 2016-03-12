@@ -18,11 +18,11 @@ public class LockBlock extends Peripheral {
     private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
     private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
     @Override
-    public void reset(Peripheral p) {p.write(ofs,resetVal);}
+    public void reset(Peripheral p) {p.poke(ofs,resetVal);}
     @Override
     public int read(Peripheral p) {
       if(dir==WO) throw new RuntimeException("Reading from a write-only register "+toString());
-      int val=p.read(ofs, 4);
+      int val=p.peek(ofs, 4);
       System.out.printf("Reading %s, value 0x%08x\n",toString(),val);
       return val;    
     }

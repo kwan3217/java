@@ -730,6 +730,21 @@ public enum Operation {
       }
     }
   },
+  MLS {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int operand1=datapath.r[ins.Rn]; 
+        int operand2=datapath.r[ins.Rm]; 
+        int addend=datapath.r[ins.Ra]; 
+        int result=addend-operand1*operand2;
+        System.out.printf("r%d=r%d(0x%08x)-r%d(0x%08x)*r%d(0x%08x)=0x%08x\n",ins.Rd,ins.Ra,datapath.r[ins.Ra],
+            ins.Rn,datapath.r[ins.Rn],
+            ins.Rm,datapath.r[ins.Rm],result
+            );
+        datapath.r[ins.Rd]=result;
+      }
+    }
+  },
   UNDEFINED {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       throw new Undefined(String.format("Undefined instruction %08x at pc %08x",ins.imm,ins.pc));

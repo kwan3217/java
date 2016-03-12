@@ -1003,6 +1003,21 @@ public enum Thumb2DecodeLine implements DecodeLine {
       return true;
     }    
   },
+  MLST1("11111/0110/000/nnnn//aaaa/dddd/0001/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2, 8,4);
+      ins.Rn=parse(hw1, 0,4);
+      ins.Rm=parse(hw2, 0,4);
+      ins.Ra=parse(hw2,12,4);
+      if(ins.Rd==13 || ins.Rd==15 || 
+          ins.Rn==13 || ins.Rn==15 ||
+          ins.Rm==13 || ins.Rm==15 ||
+          ins.Ra==13 || ins.Ra==15 ) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }    
+  },
   UNDEFINEDT1("1111/1111/1111/1111") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       return false;

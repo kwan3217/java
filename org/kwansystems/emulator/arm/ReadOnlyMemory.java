@@ -16,10 +16,7 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
   }
   @Override
   public int read(int rel_addr, int bytes) {
-    int result=0;
-    for(int i=bytes-1;i>=0;i--) {
-      result=(result<<8) | ((int)(mem[rel_addr+i]) & 0xff);
-    }
+    int result=peek(rel_addr,bytes);
     System.out.printf("readMem(%08x)=%0"+String.format("%d", bytes*2)+"x\n",rel_addr+base,result);
     return result; 
   };
@@ -38,7 +35,7 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
   public int getBase() {
     return base;
   }
-  private void loadBin(String infn) throws IOException {
+  public void loadBin(String infn) throws IOException {
     int address=0;;
     FileInputStream inf=new FileInputStream(infn);
     int b=inf.read();
@@ -52,13 +49,27 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
   /** Pokes a value into the memory, despite the fact that it is read-only. This is used by 
    * RAM as the actual write mechanism, and is intended to be lower-level IE less 
    * debugging/side effects */
-  public void poke(int address, int bytes, int val) {
+  public final void poke(int rel_addr, int bytes, int val) {
     for(int i=0;i<bytes;i++) {
-      mem[address]=(byte)((val >> (i*8)) & 0xFF);
-      address++;
+      mem[rel_addr]=(byte)((val >> (i*8)) & 0xFF);
+      rel_addr++;
     }
   }
-  public void poke(int address, int val) {
-    poke(address,4,val);
+  public final void poke(int rel_addr, int val) {
+    poke(rel_addr,4,val);
   }
+  /** Peeks at a value in memory. This is intended to be lower-level IE less 
+   * debugging/side effects */
+  public final int peek(int rel_addr, int bytes) {
+    int result=0;
+    for(int i=bytes-1;i>=0;i--) {
+      result=(result<<8) | ((int)(mem[rel_addr+i]) & 0xff);
+    }
+    return result;
+  }
+  public final int peek(int rel_addr) {
+    return peek(rel_addr,4);
+  }
+  @Override
+  public void tick(int pclk) {}
 }
