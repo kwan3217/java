@@ -15,9 +15,10 @@ public class CortexM4 extends Datapath {
   private Map<Integer,String> disasmAddrLines = new HashMap<Integer,String>();
   private Pattern P = Pattern.compile("^\\s*([0-9A-Fa-f]{1,8}):.*$");
   public boolean cycleBreakpointEnabled=true;
-  public int cycleBreakpoint=721;
+  public int cycleBreakpoint=3288;
   public boolean addressBreakpointEnabled=false;
   public int addressBreakpoint=0;
+  public boolean singleStep=false;
   public void loadDisasm(String path, String filename) throws IOException {
     List<String> disasmLines=Files.readAllLines(Paths.get(path,filename),Charset.forName("UTF-8"));
     for(String line:disasmLines) {
@@ -41,13 +42,18 @@ public class CortexM4 extends Datapath {
       }
       if(cycleBreakpointEnabled && cycles>=cycleBreakpoint) {
         cycleBreakpointEnabled=false;
+        singleStep=true;
         System.out.printf("Cycle breakpoint at cycle %d\n",cycles);
       } 
       if(addressBreakpointEnabled && ins!=null && ins.pc==addressBreakpoint) {
         addressBreakpointEnabled=false;
+        singleStep=true;
         System.out.printf("Address breakpoint at %08x\n",addressBreakpoint);
       }
       ins.execute(this);
+      if(singleStep) {
+        System.out.println("Single step");
+      }
       if(ins!=null && ins.op!=Operation.IT) shiftIT();
     }
     if(flush) {

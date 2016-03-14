@@ -183,6 +183,21 @@ public enum Thumb2DecodeLine implements DecodeLine {
       return true;
     }
   },
+  CMPregT3("11101/01/1101/1/nnnn//o/iii/1111/ii/tt/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rn=parse(hw1,0,4);
+      ins.Rm=parse(hw2,0,4);
+      int type=parse(hw2,4,2);
+      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      DecodeShiftReturn r=DecodeImmShift(type,ins.imm);
+      ins.shift_n=r.shift_n;
+      ins.shift_t=r.shift_t;
+      if(ins.Rn==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE; return true;}
+      return true;
+    }
+  },
   ITT1("1011/1111/cccc/mmmm") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       ins.mask=parse(IR,0,4);
@@ -1017,6 +1032,72 @@ public enum Thumb2DecodeLine implements DecodeLine {
           ins.Ra==13 || ins.Ra==15 ) {ins.op=UNPREDICTABLE;return true;}
       return true;
     }    
+  },
+  LDRBimmT1("011/1/1/iiiii/nnn/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=parse(IR,6,5);
+      ins.Rd=parse(IR,0,3);
+      ins.Rn=parse(IR,3,3);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      return true;
+    }
+  },
+  LDRBimmT2("11111/00/0/1/00/1/nnnn//dddd/iiiiiiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.imm=parse(hw2, 0,12);
+      ins.Rd =parse(hw1,12, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      if(ins.Rd==0b1111) return false; //SEE PLD;
+      if(ins.Rn==0b1111) return false; //SEE LDRB (literal);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      return true;
+    }
+  },
+  LDRBimmT3("11111/00/0/0/00/1/nnnn//dddd/1/P/U/W/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.imm=parse(hw2, 0, 8);
+      ins.Rd =parse(hw1,12, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      boolean P=parseBit(hw2,10);
+      boolean U=parseBit(hw2, 9);
+      boolean W=parseBit(hw2, 8);
+      if(ins.Rd==0b1111&& P && !U && !W) return false; //SEE PLD (immediate);
+      if(ins.Rn==0b1111) return false; //SEE LDRB (literal);
+      if(P && U && !W) return false; //SEE LRDBT;
+      if(!P && !W) {ins.op=UNDEFINED;return true;}
+      ins.index=P;
+      ins.add=U;
+      ins.wback=W;
+      if(ins.Rd==13 || (ins.wback && ins.Rn==ins.Rd)) {ins.op=UNPREDICTABLE;return true;}
+      if(ins.Rd==15 && (!P || U || W)) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  UXTBT1("1011/0010/11/mmm/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=0; //use this for the rotation value
+      ins.Rd=parse(IR,0,3);
+      ins.Rm=parse(IR,3,3);
+      return true;
+    }
+  },
+  UXTBT2("11111/010/0/101/1111//1111/dddd/1/o/ii/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.imm=parse(hw2,4,2)<<3; //use this for the rotation value
+      ins.Rd=parse(hw2,8,4);
+      ins.Rm=parse(hw2,0,4);
+      return true;
+    }
   },
   UNDEFINEDT1("1111/1111/1111/1111") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {

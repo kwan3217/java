@@ -23,12 +23,15 @@ public class Emulator {
     {   410+bitcycles*1,(1<<1),0,(0<<10),0,0,0}, //leading edge LSB high bits (up)
     {   410+bitcycles*7,0     ,0,(0<<10),0,0,0}, //trailing edge data high bits (down)
     {   410+bitcycles*9,(1<<1),0,(0<<10),0,0,0}, //trailing edge data low bits (up)
-    });
+    }
+        );
     lpc4078.MainFlash.loadBin("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/FW.SFE");
     lpc4078.BootRom.loadBin("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/bootstrap.ofs0.bin");
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","bootstrap.disasm");
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","SerialTest.lss");
     lpc4078.reset();
+ //   lpc4078.addressBreakpoint=0x1fff01c0;
+ //   lpc4078.addressBreakpointEnabled=true;
     for(;;) {
       lpc4078.cycle();
     }

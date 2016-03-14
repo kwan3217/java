@@ -23,11 +23,11 @@ public class LPC4078 extends CortexM4 {
   public Watchdog watchdog=new Watchdog();
   public GPIO gpio;
   public UART[] uart=new UART[] {
-    new UART(0,0x4000C000),
-    new UART(1,0x40010000),
-    new UART(2,0x40098000),
-    new UART(3,0x4009C000),
-    new UART(4,0x400A4000)
+    new UART(0,0x4000C000,"Synchronized\r\n12000\r\nJ\r\n"),
+    new UART(1,0x40010000,""),
+    new UART(2,0x40098000,""),
+    new UART(3,0x4009C000,""),
+    new UART(4,0x400A4000,"")
   };
   public Timer[] timer=new Timer[] {
     new Timer(0,0x40004000),

@@ -9,28 +9,27 @@ import org.kwansystems.emulator.arm.RegisterDirection;
 import org.kwansystems.emulator.arm.peripherals.LockBlock.Registers;
 
 public class UART extends Peripheral {
-  //All this state being static is an ugly hack, forced on us by the fact that the elements
-  //of the Registers enum only have access to the static fields of UART. We therefore set
-  //the activePort static field each time we read or write.
-  //We only have to do this for registers shadowed by the DLAB, since everything else gets written
-  //to the backing store by default. Also, we only have to keep one side of the shadow, since we
-  //can let the backing store handle the other side. Finally, RBR() and THR() are going to end up
+  //When registers are shadowed, we only have to keep one side of the shadow, since we
+  //can let the backing store handle the other side. Also, RBR() and THR() are going to end up
   //complicated. However, that means that they are backed by functions, and we can use the backing store
-  //for UDLL. The RBR() and THR() functions will need access to the cycle counter at least. 
+  //for UDLL.  
+  private final String outData;
+  private int outDataPtr;
   private boolean DLAB() {
-    return (read(Registers.ULCR.getOfs()) & 1<<7)!=0;
+    return (peek(Registers.ULCR.ofs) & 1<<7)!=0;
   }
   private int DLM;
   private int RBR() {
     //TODO - return the right character at the right time, based
     //       on the cycle counter.
-    int val=0;
+    int val=(int)outData.charAt(outDataPtr);
+    outDataPtr++;
     System.out.printf("Reading URBR, value 0x%08x\n",val);
     return val;
   }
   private void THR(int val) {
     //TODO - do something with the value that is written
-    System.out.printf("Writing UTHR, value 0x%08x\n",val);
+    System.out.printf("Writing UTHR, value 0x%02x (%c)\n",val,(char)val);
   }
   private final int port;
   public enum Registers implements DeviceRegister {
@@ -46,7 +45,7 @@ public class UART extends Peripheral {
       @Override
       public void write(Peripheral uart, int val) {
         if(((UART)uart).DLAB()) {
-          super.write(uart,val);
+          super.write(uart,val&0xff); //Only accept lowest 8 bits, bootstrap may write higher bits
         } else {
           ((UART)uart).THR(val);
         }
@@ -65,6 +64,7 @@ public class UART extends Peripheral {
       @Override
       public void write(Peripheral uart, int val) {
         if(((UART)uart).DLAB()) {
+          val&=0xff; //only accept lowest 8 bits
           System.out.printf("Writing UDLM, value 0x%08x\n",val);
           ((UART)uart).DLM=val;
         } else {
@@ -73,16 +73,21 @@ public class UART extends Peripheral {
       }
     }, //UDLM(r/w)   when DLAB=1
 
-    UIIR     (RO,0x008),
+    UIIR     (RO,0x008,0x01),
     UFCR     (WO,0x008),
     ULCR     (RW,0x00C),
     UMCR     (RW,0x010),
-    ULSR     (RO,0x014),
+    ULSR     (RO,0x014,0x60) {
+      public int read(Peripheral p) {
+        UART uart=(UART)p;
+        return p.peek(ofs)|((uart.outDataPtr<uart.outData.length())?1:0);
+      }
+    },
     UMSR     (RO,0x018),
     USCR     (RW,0x01C),
     UACR     (RW,0x020),
-    UFDR     (RW,0x028),
-    UTER     (RW,0x030);
+    UFDR     (RW,0x028,0x10),
+    UTER     (RW,0x030,0x80);
     //Register boilerplate
     public final int ofs;
     public final int resetVal;
@@ -109,10 +114,12 @@ public class UART extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public UART(int Lport, int base) {
+  public UART(int Lport, int base, String LoutData) {
     super(String.format("UART%d", Lport),base,0x4000);
     port=Lport;
     setupRegs(Registers.values());
+    outData=LoutData;
+    outDataPtr=0;
   }
   @Override
   public int read(int rel_addr, int bytes) {

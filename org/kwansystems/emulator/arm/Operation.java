@@ -745,6 +745,38 @@ public enum Operation {
       }
     }
   },
+  LDRBimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
+        int address;
+        if(ins.index) {
+          address=offset_addr;
+          System.out.printf("address=r%d(0x%08x)%cr%d(0x%08x) %s %d=0x%08x\n",
+                             ins.Rn,datapath.r[ins.Rn], 
+                             ins.add?'+':'-',
+                             ins.Rm,datapath.r[ins.Rm], 
+                             ins.shift_t.toString(),ins.shift_n,
+                             address);
+        } else {
+          address=datapath.r[ins.Rn];
+          System.out.printf("address=r%d(0x%08x)\n",
+                              ins.Rn,datapath.r[ins.Rn]);
+        }
+        datapath.r[ins.Rd]=datapath.readMem1(address) & 0xFF;
+        System.out.printf(" r%d=0x%08x\n",ins.Rd,datapath.r[ins.Rd]);
+      }
+    }
+  },
+  UXTB {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int rotated=ROR(datapath.r[ins.Rm],ins.imm);
+        datapath.r[ins.Rd]=rotated & 0xFF;
+        System.out.printf("r%d=(r%d(0x%08x) ROR %d)<7:0>=%02x\n",ins.Rd,ins.Rm,datapath.r[ins.Rm],ins.imm,datapath.r[ins.Rd]);
+      }
+    }
+  },
   UNDEFINED {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       throw new Undefined(String.format("Undefined instruction %08x at pc %08x",ins.imm,ins.pc));
