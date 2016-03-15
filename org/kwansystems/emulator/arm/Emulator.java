@@ -25,13 +25,19 @@ public class Emulator {
     {   410+bitcycles*9,(1<<1),0,(0<<10),0,0,0}, //trailing edge data low bits (up)
     }
         );
+    ((UART)(lpc4078.uart[0])).outData=new UARTOutData[] {
+      new UARTOutData(3568,"Synchronized\r\n"),
+      new UARTOutData(6753,"12000\r\n"),
+      new UARTOutData(9579,"J\r\n"),
+    };
+    ((UART)(lpc4078.uart[0])).ouf=new PrintWriter(new FileWriter("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/bootstrap.out"));
     lpc4078.MainFlash.loadBin("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/FW.SFE");
     lpc4078.BootRom.loadBin("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/bootstrap.ofs0.bin");
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","bootstrap.disasm");
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","SerialTest.lss");
     lpc4078.reset();
- //   lpc4078.addressBreakpoint=0x1fff01c0;
- //   lpc4078.addressBreakpointEnabled=true;
+    lpc4078.addressBreakpoint=0x1fff0106;
+    lpc4078.addressBreakpointEnabled=true;
     for(;;) {
       lpc4078.cycle();
     }

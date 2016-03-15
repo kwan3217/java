@@ -14,8 +14,8 @@ public class CortexM4 extends Datapath {
   public Thumb2Decode decode = new Thumb2Decode();
   private Map<Integer,String> disasmAddrLines = new HashMap<Integer,String>();
   private Pattern P = Pattern.compile("^\\s*([0-9A-Fa-f]{1,8}):.*$");
-  public boolean cycleBreakpointEnabled=true;
-  public int cycleBreakpoint=3288;
+  public boolean cycleBreakpointEnabled=false;
+  public int cycleBreakpoint=0;
   public boolean addressBreakpointEnabled=false;
   public int addressBreakpoint=0;
   public boolean singleStep=false;

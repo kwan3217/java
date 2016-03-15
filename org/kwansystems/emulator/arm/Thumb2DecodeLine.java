@@ -935,7 +935,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       ins.Rd=parse(IR,8,3);
       ins.setflags=SetFlags.FALSE;
-      ins.imm=parse(IR,0,8);
+      ins.imm=parse(IR,0,8)<<2;
       return true;
     }
   },
@@ -1049,7 +1049,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
       ins.imm=parse(hw2, 0,12);
-      ins.Rd =parse(hw1,12, 4);
+      ins.Rd =parse(hw2,12, 4);
       ins.Rn =parse(hw1, 0, 4);
       if(ins.Rd==0b1111) return false; //SEE PLD;
       if(ins.Rn==0b1111) return false; //SEE LDRB (literal);
@@ -1096,6 +1096,96 @@ public enum Thumb2DecodeLine implements DecodeLine {
       ins.imm=parse(hw2,4,2)<<3; //use this for the rotation value
       ins.Rd=parse(hw2,8,4);
       ins.Rm=parse(hw2,0,4);
+      return true;
+    }
+  },
+  STRBregT1("0101/010/mmm/nnn/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rd=parse(IR,0,3);
+      ins.Rn=parse(IR,3,3);
+      ins.Rm=parse(IR,6,3);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      ins.shift_t=SRType.LSL;
+      ins.shift_n=0;
+      return true;
+    }
+  },
+  STRBregT2("11111/00/0/0/00/0/nnnn//dddd/0/00000/ii/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rm =parse(hw2, 0, 4);
+      ins.Rd =parse(hw2,12, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      if(ins.Rn==0b1111) {ins.op=UNDEFINED;return true;}
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      ins.shift_n=parse(hw2, 0,12);
+      ins.shift_t=SRType.LSL;
+      if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  LSRimmT1("000/01/iiiii/mmm/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=parse(IR,6,5);
+      if(ins.imm==0b00000) return false; //SEE MOV (register)
+      ins.Rd=parse(IR,0,3);
+      ins.Rm=parse(IR,3,3);
+      ins.setflags=SetFlags.NOT_IN_IT;
+      DecodeShiftReturn r=DecodeImmShift(0b01,ins.imm);
+      ins.shift_n=r.shift_n;
+      return true;
+    }    
+  },
+  LSRimmT2("11101/01/0010/S/1111//o/iii/dddd/ii/01/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2,8,4);
+      ins.Rn=parse(hw1,0,4);
+      ins.Rm=parse(hw2,0,4);
+      boolean S=parseBit(hw1,4);
+      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      if(ins.imm==0b00000) return false; //SEE MOV (register)
+      ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
+      DecodeShiftReturn r=DecodeImmShift(0b01,ins.imm);
+      ins.shift_n=r.shift_n;
+      if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }    
+  },
+  LDRBregT1("0101/110/mmm/nnn/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rd=parse(IR,0,3);
+      ins.Rn=parse(IR,3,3);
+      ins.Rm=parse(IR,6,3);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      ins.shift_t=SRType.LSL;
+      ins.shift_n=0;
+      return true;
+    }
+  },
+  LDRBregT2("11111/00/0/0/00/1/nnnn//dddd/0/00000/ii/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rm =parse(hw2, 0, 4);
+      ins.Rd =parse(hw2,12, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      if(ins.Rd==0b1111) {return false;} //SEE PLD;
+      if(ins.Rn==0b1111) {return false;} //SEE LDRB (literal);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      ins.shift_n=parse(hw2, 0,12);
+      ins.shift_t=SRType.LSL;
+      if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
     }
   },

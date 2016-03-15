@@ -70,6 +70,7 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
   public final int peek(int rel_addr) {
     return peek(rel_addr,4);
   }
+  protected int pclk;
   @Override
-  public void tick(int pclk) {}
+  public void tick(int Lpclk) {pclk=Lpclk;}
 }

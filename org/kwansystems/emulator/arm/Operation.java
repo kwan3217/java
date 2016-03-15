@@ -698,6 +698,7 @@ public enum Operation {
           System.out.printf(", C=%d", datapath.APSR_C()?1:0);
           System.out.printf(", V=%d\n", datapath.APSR_V()?1:0);
         }
+        System.out.println();
       }
     }
   },
@@ -774,6 +775,63 @@ public enum Operation {
         int rotated=ROR(datapath.r[ins.Rm],ins.imm);
         datapath.r[ins.Rd]=rotated & 0xFF;
         System.out.printf("r%d=(r%d(0x%08x) ROR %d)<7:0>=%02x\n",ins.Rd,ins.Rm,datapath.r[ins.Rm],ins.imm,datapath.r[ins.Rd]);
+      }
+    }
+  },
+  STRBreg {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int offset=Shift(datapath.r[ins.Rm],ins.shift_t,ins.shift_n,datapath.APSR_C());
+        int address=datapath.r[ins.Rn]+offset;
+        System.out.printf("address=r%d(0x%08x)+r%d(0x%08x) %s %d=0x%08x\n",
+                           ins.Rn,datapath.r[ins.Rn], 
+                           ins.Rm,datapath.r[ins.Rm], 
+                           ins.shift_t.toString(),ins.shift_n,
+                           address);
+        System.out.printf("Writing low byte of r%d(0x%08x)=0x%02x\n",ins.Rd,datapath.r[ins.Rd],datapath.r[ins.Rd] & 0xFF);
+        datapath.writeMem1(address,datapath.r[ins.Rd] & 0xFF);
+      }
+    }
+  },
+  LSRimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        ResultWithCarry r=Shift_C(datapath.r[ins.Rm],SRType.LSR,ins.shift_n,datapath.APSR_C());
+        System.out.printf("r%d=r%d(0x%08x) >>> %d=0x%08x", ins.Rd,ins.Rm,datapath.r[ins.Rm],ins.imm,r.result);
+        datapath.r[ins.Rd]=r.result;
+        if(datapath.shouldSetFlags(ins.setflags)) {
+          datapath.APSR_setN(parseBit(r.result,31));
+          datapath.APSR_setZ(r.result==0);
+          datapath.APSR_setC(r.carry_out);
+          System.out.printf(", N=%d", datapath.APSR_N()?1:0);
+          System.out.printf(", Z=%d", datapath.APSR_Z()?1:0);
+          System.out.printf(", C=%d", datapath.APSR_C()?1:0);
+        }
+        System.out.println();
+      }
+    }
+  },
+  LDRBreg {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int offset=Shift(datapath.r[ins.Rm],ins.shift_t,ins.shift_n,datapath.APSR_C());
+        int offset_addr=ins.add?(datapath.r[ins.Rn]+offset):(datapath.r[ins.Rn]-offset);
+        int address;
+        if(ins.index) {
+          address=offset_addr;
+          System.out.printf("address=r%d(0x%08x)%cr%d(0x%08x) %s %d=0x%08x\n",
+                             ins.Rn,datapath.r[ins.Rn], 
+                             ins.add?'+':'-',
+                             ins.Rm,datapath.r[ins.Rm], 
+                             ins.shift_t.toString(),ins.shift_n,
+                             address);
+        } else {
+          address=datapath.r[ins.Rn];
+          System.out.printf("address=r%d(0x%08x)\n",
+                              ins.Rn,datapath.r[ins.Rn]);
+        }
+        datapath.r[ins.Rd]=datapath.readMem1(address) & 0xFF;
+        System.out.printf(" r%d=0x%08x\n",ins.Rd,datapath.r[ins.Rd]);
       }
     }
   },

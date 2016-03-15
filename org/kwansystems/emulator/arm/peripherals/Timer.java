@@ -9,7 +9,8 @@ import org.kwansystems.emulator.arm.RegisterDirection;
 
 public class Timer extends Peripheral {
   public final int port;
-  public void tick(int pclk) {
+  public void tick(int Lpclk) {
+    super.tick(Lpclk);
     int TTCR=peek(Registers.TCR.ofs);
     if((TTCR & (1<<1))>0) {
       //If the timer is in reset...

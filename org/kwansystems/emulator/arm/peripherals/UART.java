@@ -2,34 +2,52 @@ package org.kwansystems.emulator.arm.peripherals;
 
 import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
-import org.kwansystems.emulator.arm.Datapath;
+import java.io.PrintWriter;
+
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
-import org.kwansystems.emulator.arm.peripherals.LockBlock.Registers;
 
 public class UART extends Peripheral {
   //When registers are shadowed, we only have to keep one side of the shadow, since we
   //can let the backing store handle the other side. Also, RBR() and THR() are going to end up
   //complicated. However, that means that they are backed by functions, and we can use the backing store
-  //for UDLL.  
-  private final String outData;
-  private int outDataPtr;
+  //for UDLL.
+  public PrintWriter ouf;
+  public UARTOutData[] outData;
   private boolean DLAB() {
     return (peek(Registers.ULCR.ofs) & 1<<7)!=0;
   }
   private int DLM;
+  private boolean hasData() {
+    for(UARTOutData o:outData) {
+      if(o.cycles<pclk && !o.done()) return true;       
+    }
+    return false;
+  }
+  private int getData() {
+    for(UARTOutData o:outData) {
+      if(o.cycles<pclk && !o.done()) return (int)o.get();      
+    }
+    return 0;
+  }
   private int RBR() {
-    //TODO - return the right character at the right time, based
-    //       on the cycle counter.
-    int val=(int)outData.charAt(outDataPtr);
-    outDataPtr++;
-    System.out.printf("Reading URBR, value 0x%08x\n",val);
+    int val=0;
+    if(hasData()) {
+      val=getData();
+      System.out.printf("Reading URBR, value 0x%02x (%c)\n",val,Character.toChars(val)[0]);
+    } else {
+      System.out.printf("Reading URBR, no data available, value 0x%02x\n",val);
+    }
     return val;
   }
   private void THR(int val) {
     //TODO - do something with the value that is written
     System.out.printf("Writing UTHR, value 0x%02x (%c)\n",val,(char)val);
+    if(ouf!=null) {
+      ouf.print((char)val);
+      ouf.flush();
+    }
   }
   private final int port;
   public enum Registers implements DeviceRegister {
@@ -79,8 +97,11 @@ public class UART extends Peripheral {
     UMCR     (RW,0x010),
     ULSR     (RO,0x014,0x60) {
       public int read(Peripheral p) {
+        boolean RDR;
         UART uart=(UART)p;
-        return p.peek(ofs)|((uart.outDataPtr<uart.outData.length())?1:0);
+        int value=p.peek(ofs)|(uart.hasData()?1:0);
+        System.out.printf("reading LSR, value 0x%02x\n",value);
+        return value;
       }
     },
     UMSR     (RO,0x018),
@@ -114,12 +135,11 @@ public class UART extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public UART(int Lport, int base, String LoutData) {
+  public UART(int Lport, int base) {
     super(String.format("UART%d", Lport),base,0x4000);
     port=Lport;
     setupRegs(Registers.values());
-    outData=LoutData;
-    outDataPtr=0;
+    outData=new UARTOutData[0];
   }
   @Override
   public int read(int rel_addr, int bytes) {
