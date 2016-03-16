@@ -1189,6 +1189,50 @@ public enum Thumb2DecodeLine implements DecodeLine {
       return true;
     }
   },
+  STRBimmT1("011/1/0/iiiii/nnn/ddd") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.imm=parse(IR,6,5);
+      ins.Rd=parse(IR,0,3);
+      ins.Rn=parse(IR,3,3);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      return true;
+    }
+  },
+  STRBimmT2("11111/00/0/1/00/0/nnnn//dddd/iiiiiiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.imm=parse(hw2, 0,12);
+      ins.Rd =parse(hw2,12, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      ins.index=true;
+      ins.add=true;
+      ins.wback=false;
+      if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  STRBimmT3("11111/00/0/0/00/0/nnnn//dddd/1/P/U/W/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.imm=parse(hw2, 0, 8);
+      ins.Rd =parse(hw1,12, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      boolean P=parseBit(hw2,10);
+      boolean U=parseBit(hw2, 9);
+      boolean W=parseBit(hw2, 8);
+      if(P && U && !W) return false; //SEE STRBT;
+      if(ins.Rn==0b1111 || !P && !W) {ins.op=UNDEFINED;return true;}
+      ins.index=P;
+      ins.add=U;
+      ins.wback=W;
+      if(ins.Rd==13 || ins.Rd==15 || (ins.wback && ins.Rn==ins.Rd)) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
   UNDEFINEDT1("1111/1111/1111/1111") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       return false;

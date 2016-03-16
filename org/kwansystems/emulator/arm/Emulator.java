@@ -36,7 +36,7 @@ public class Emulator {
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","bootstrap.disasm");
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","SerialTest.lss");
     lpc4078.reset();
-    lpc4078.addressBreakpoint=0x1fff0106;
+    lpc4078.addressBreakpoint=0x1fff0116;
     lpc4078.addressBreakpointEnabled=true;
     for(;;) {
       lpc4078.cycle();

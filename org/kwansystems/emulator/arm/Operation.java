@@ -835,6 +835,22 @@ public enum Operation {
       }
     }
   },
+  STRBimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int offset_addr=ins.add?(datapath.r[ins.Rn]+ins.imm):(datapath.r[ins.Rn]-ins.imm);
+        int address=ins.index?offset_addr:datapath.r[ins.Rn];
+        if(ins.index) {
+          System.out.printf("Using r%d=0x%08x as address\n",ins.Rn,address);
+        } else {
+          System.out.printf("Using r%d%c%d=0x%08x as address\n",ins.Rn,ins.add?'+':'-',ins.imm,address);
+        }
+        if(ins.wback) datapath.r[ins.Rn]=offset_addr;
+        System.out.printf("Writing low byte of r%d(0x%08x)=0x%02x\n",ins.Rd,datapath.r[ins.Rd],datapath.r[ins.Rd] & 0xFF);
+        datapath.writeMem1(address,datapath.r[ins.Rd] & 0xFF);
+      }
+    }
+  },
   UNDEFINED {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       throw new Undefined(String.format("Undefined instruction %08x at pc %08x",ins.imm,ins.pc));
