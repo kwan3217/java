@@ -4,12 +4,12 @@ public class DecodedInstruction {
   public enum SetFlags {TRUE,FALSE,IN_IT,NOT_IN_IT};
   Operation op;
   int opcode;
-  int imm;
+  int imm,lsbit,widthm1;
   int Rm,Rn,Rd,Ra;
   ConditionCode cond=ConditionCode.Thumb;
   SRType shift_t=SRType.NONE;
   int shift_n;
-  boolean add,index,wback,UnalignedAllowed,nonzero;
+  boolean add,index,wback,UnalignedAllowed,nonzero,is_tbh;
   boolean thumbExpand;
   SetFlags setflags;
   int mask, firstcond; //used in IT instruction

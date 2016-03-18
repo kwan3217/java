@@ -251,15 +251,20 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
+      int S=parse(hw1,10,1);
+      int I1=1-(parse(hw2,13,1) ^ S);
+      int I2=1-(parse(hw2,11,1) ^ S);
+      int imm11=parse(hw2, 0,11);
+      int imm10=parse(hw1, 0,10);
       int bitpos=0;
       int len=1;
-      ins.imm=0; 
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,0                );bitpos+=len; //0
-      len=11;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm11
-      len=10;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1, 0,len));bitpos+=len; //imm10
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,11,len));bitpos+=len; //J2
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,13,len));bitpos+=len; //J1
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //S
+      ins.imm=0;
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,0    );bitpos+=len; //0
+      len=11;ins.imm=writeField(ins.imm,bitpos,len,imm11);bitpos+=len; //imm11
+      len=10;ins.imm=writeField(ins.imm,bitpos,len,imm10);bitpos+=len; //imm10
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,I2   );bitpos+=len; //I2
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,I1   );bitpos+=len; //I1
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,S    );bitpos+=len; //S
       ins.imm=signExtend(ins.imm,bitpos);
       //TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
@@ -1230,6 +1235,32 @@ public enum Thumb2DecodeLine implements DecodeLine {
       ins.add=U;
       ins.wback=W;
       if(ins.Rd==13 || ins.Rd==15 || (ins.wback && ins.Rn==ins.Rd)) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  TBT1("11101/00/0/1/1/0/1/nnnn//iiii/oooo/000/H/mmmm") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rm =parse(hw2, 0, 4);
+      ins.Rn =parse(hw1, 0, 4);
+      boolean H=parseBit(hw2, 4);
+      // TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
+      ins.is_tbh=H;
+      if(ins.Rn==13 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }
+  },
+  UBFXT1("11110/o/11/110/0/nnnn//0/iii/dddd/ii/o/wwwww") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      int imm2=parse(hw2,6,2);
+      int imm3=parse(hw2,12,3);
+      ins.widthm1=parse(hw2,0,5);
+      ins.lsbit=imm3<<2 | imm2;
+      ins.Rd=parse(hw2,8,4);
+      ins.Rn=parse(hw1,0,4);
       return true;
     }
   },

@@ -186,7 +186,7 @@ public enum Operation {
         int pc=datapath.r[15];
         if(ins.is32) {pc-=2;}
         int target=pc+ins.imm;
-        System.out.printf("Jumping to r15(0x%08x)+0x%08x=0x%08x\n",datapath.r[15],ins.imm,target);
+        System.out.printf("Jumping to r15(0x%08x)+0x%08x=0x%08x\n",pc,ins.imm,target);
         datapath.BranchWritePC(target);
       }
     }
@@ -848,6 +848,37 @@ public enum Operation {
         if(ins.wback) datapath.r[ins.Rn]=offset_addr;
         System.out.printf("Writing low byte of r%d(0x%08x)=0x%02x\n",ins.Rd,datapath.r[ins.Rd],datapath.r[ins.Rd] & 0xFF);
         datapath.writeMem1(address,datapath.r[ins.Rd] & 0xFF);
+      }
+    }
+  },
+  TB {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int halfwords;
+        int pc=datapath.r[15]-2; //since this is a 32-bit instruction
+        int base;
+        if(ins.Rn==15) {
+          base=pc;
+        } else {
+          base=datapath.r[ins.Rn];
+        }
+        if(ins.is_tbh) {
+          halfwords=datapath.readMem2(base+LSL(datapath.r[ins.Rm],1));
+          System.out.printf("Reading table r%d(0x%08x)+r%d(0x%08x)<<1=0x%08x\n",ins.Rn,base,ins.Rm,datapath.r[ins.Rm],halfwords);
+        } else {
+          halfwords=datapath.readMem1(base+datapath.r[ins.Rm]);
+          System.out.printf("Reading table r%d(0x%08x)+r%d(0x%08x)=0x%08x\n",ins.Rn,base,ins.Rm,datapath.r[ins.Rm],halfwords);
+        }
+        datapath.BranchWritePC(pc+2*halfwords);
+      }
+    }
+  },
+  UBFX {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      if(datapath.ConditionPassed(ins.cond)) {
+        int msbit=ins.lsbit+ins.widthm1;
+        datapath.r[ins.Rd]=parse(datapath.r[ins.Rn],ins.lsbit,ins.widthm1+1);
+        System.out.printf("r%d=r%d(0x%08x)<%d:%d>=0x%08x\n",ins.Rd,ins.Rn,datapath.r[ins.Rn],msbit,ins.lsbit,datapath.r[ins.Rd]);
       }
     }
   },

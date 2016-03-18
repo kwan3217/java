@@ -16,6 +16,8 @@ public class CortexM4 extends Datapath {
   private Pattern P = Pattern.compile("^\\s*([0-9A-Fa-f]{1,8}):.*$");
   public boolean cycleBreakpointEnabled=false;
   public int cycleBreakpoint=0;
+  public boolean cycleHaltpointEnabled=false;
+  public int cycleHaltpoint=0;
   public boolean addressBreakpointEnabled=false;
   public int addressBreakpoint=0;
   public boolean singleStep=false;
@@ -44,6 +46,10 @@ public class CortexM4 extends Datapath {
         cycleBreakpointEnabled=false;
         singleStep=true;
         System.out.printf("Cycle breakpoint at cycle %d\n",cycles);
+      } 
+      if(cycleHaltpointEnabled && cycles>=cycleHaltpoint) {
+        System.out.printf("Cycle haltpoint at cycle %d\n",cycles);
+        System.exit(0);
       } 
       if(addressBreakpointEnabled && ins!=null && ins.pc==addressBreakpoint) {
         addressBreakpointEnabled=false;

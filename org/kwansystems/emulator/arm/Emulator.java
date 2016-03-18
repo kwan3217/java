@@ -18,17 +18,18 @@ public class Emulator {
     final int bitcycles=fosc/baud;
     LPC4078 lpc4078=new LPC4078(new int[][] {
     //Cycle             0      1 2       3 4 5 
-    {     0,            (1<<1),0,(0<<10),0,0,0}, //Start state, BSL asserted, UART0 RX idle
+    {     0,            (1<<3),0,(0<<10),0,0,0}, //Start state, BSL asserted, UART0 RX idle
     {   410,            0     ,0,(0<<10),0,0,0}, //leading edge of start bit (down)
-    {   410+bitcycles*1,(1<<1),0,(0<<10),0,0,0}, //leading edge LSB high bits (up)
+    {   410+bitcycles*1,(1<<3),0,(0<<10),0,0,0}, //leading edge LSB high bits (up)
     {   410+bitcycles*7,0     ,0,(0<<10),0,0,0}, //trailing edge data high bits (down)
-    {   410+bitcycles*9,(1<<1),0,(0<<10),0,0,0}, //trailing edge data low bits (up)
+    {   410+bitcycles*9,(1<<3),0,(0<<10),0,0,0}, //trailing edge data low bits (up)
     }
         );
     ((UART)(lpc4078.uart[0])).outData=new UARTOutData[] {
-      new UARTOutData(3568,"Synchronized\r\n"),
-      new UARTOutData(6753,"12000\r\n"),
-      new UARTOutData(9579,"J\r\n"),
+      new UARTOutData( 3568,"Synchronized\r\n"),
+      new UARTOutData( 6753,"12000\r\n"),
+      new UARTOutData( 9579,"J\r\n"),
+      new UARTOutData(12925,"K\r\n"),
     };
     ((UART)(lpc4078.uart[0])).ouf=new PrintWriter(new FileWriter("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/bootstrap.out"));
     lpc4078.MainFlash.loadBin("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest/FW.SFE");
@@ -36,8 +37,10 @@ public class Emulator {
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","bootstrap.disasm");
     lpc4078.loadDisasm("/mnt/big/home/chrisj/workspace/code/Loginator/SerialTest","SerialTest.lss");
     lpc4078.reset();
-    lpc4078.addressBreakpoint=0x1fff0116;
+    lpc4078.addressBreakpoint=0x1fff102c;
     lpc4078.addressBreakpointEnabled=true;
+    lpc4078.cycleHaltpoint=20000;
+    lpc4078.cycleHaltpointEnabled=true;
     for(;;) {
       lpc4078.cycle();
     }
