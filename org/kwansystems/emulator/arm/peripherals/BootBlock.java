@@ -21,7 +21,8 @@ public class BootBlock extends Peripheral {
     BOOT5E8        (RO,0x5e8,0xFFFFFFFF), //used as a pointer in reset2_cont, but not used if value is 0xFFFFFFFF
     BOOT_EMCDLYCTL (RO,0x5f0),
     BOOT_DEVICEID  (RO,0x430,0x47193F47),
-    BOOT_CODEVER   (RO,0x434,0x0102)      //Sets this to be code version 1.2. Curious that this is in the boot block and not the code itself.
+    BOOT_CODEVER   (RO,0x434,0x0102),      //Sets this to be code version 1.2. Curious that this is in the boot block and not the code itself.
+    BOOT_SERIAL    (RO,0x5dc,0),      //Serial number address
     ;
     //Register boilerplate
     public final int ofs;

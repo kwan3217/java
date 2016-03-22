@@ -1128,7 +1128,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
       ins.index=true;
       ins.add=true;
       ins.wback=false;
-      ins.shift_n=parse(hw2, 0,12);
+      ins.shift_n=parse(hw2, 4,2);
       ins.shift_t=SRType.LSL;
       if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -1188,7 +1188,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
       ins.index=true;
       ins.add=true;
       ins.wback=false;
-      ins.shift_n=parse(hw2, 0,12);
+      ins.shift_n=parse(hw2, 4,2);
       ins.shift_t=SRType.LSL;
       if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -1263,6 +1263,23 @@ public enum Thumb2DecodeLine implements DecodeLine {
       ins.Rn=parse(hw1,0,4);
       return true;
     }
+  },
+  MVNimmT1("11110/i/0/0011/S/1111//0/iii/dddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=parse(hw2,8,4);
+      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      int bitpos=0;
+      int len;
+      ins.imm=0; 
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      ins.thumbExpand=true; //Can't evaluate ThumbExpandImmWithC here since APSR.c is an execute stage thing
+      if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE;return true;}
+      return true;
+    }    
   },
   UNDEFINEDT1("1111/1111/1111/1111") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {

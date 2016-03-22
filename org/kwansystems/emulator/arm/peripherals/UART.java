@@ -142,16 +142,6 @@ public class UART extends Peripheral {
     outData=new UARTOutData[0];
   }
   @Override
-  public int read(int rel_addr, int bytes) {
-    System.out.printf("UART%d ",port);
-    return super.read(rel_addr, bytes);
-  }
-  @Override
-  public void write(int rel_addr, int bytes, int value) {
-    System.out.printf("UART%d ",port);
-    super.write(rel_addr, bytes, value);
-  }
-  @Override
   public void reset(boolean inReset) {
     reset(inReset,Registers.values());
   }

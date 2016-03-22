@@ -58,6 +58,32 @@ public class CortexM4 extends Datapath {
       }
       ins.execute(this);
       if(singleStep) {
+        for(int i=0;i<16;i+=4) {
+          for(int j=0;j<4;j++) {
+            System.out.printf("r%02d: 0x%08x   ",i+j,r[i+j]);
+          }
+          System.out.println();
+        }
+        for(int i=0;i<5;i++) {
+          for(int j=0;j<15;j++) {
+            System.out.printf("%02x", peek(0x1000016e+i*15+j,1));
+          }
+          System.out.print(" ");
+          for(int j=0;j<15;j++) {
+            char c=(char)peek(0x1000016e+i*15+j,1);
+            System.out.printf("%c", c>=' '&&c<='~'?c:'.');
+          }
+          System.out.println();
+        }
+        for(int j=0;j<15;j++) {
+          System.out.printf("%02x", peek(0x10000128+j,1));
+        }
+        System.out.print(" ");
+        for(int j=0;j<15;j++) {
+          char c=(char)peek(0x10000128+j,1);
+          System.out.printf("%c", c>=' '&&c<='~'?c:'.');
+        }
+        System.out.println();
         System.out.println("Single step");
       }
       if(ins!=null && ins.op!=Operation.IT) shiftIT();

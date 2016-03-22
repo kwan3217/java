@@ -103,16 +103,7 @@ public class SystemControlBlock extends Peripheral {
   }
   @Override
   public void reset(boolean inReset) {
+    currentResetArray0=resetArray0;
     reset(inReset,Registers.values());
-  }
-  @Override
-  public int read(int rel_addr, int bytes) {
-    currentResetArray0=resetArray0;
-    return super.read(rel_addr, bytes);
-  }
-  @Override
-  public void write(int rel_addr, int bytes, int value) {
-    currentResetArray0=resetArray0;
-    super.write(rel_addr, bytes, value);
   }
 }

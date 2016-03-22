@@ -134,7 +134,8 @@ public class GPIO extends Peripheral {
     inputData=LinputData;
     setupRegs(Registers.values());
   }
-  public void tick(int pclk) {
+  public void tick(int Lpclk) {
+    super.tick(Lpclk);
     cycles=pclk;
   }
 }

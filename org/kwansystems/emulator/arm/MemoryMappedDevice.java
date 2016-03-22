@@ -10,5 +10,6 @@ public interface MemoryMappedDevice {
    * to do anything with this, but things like Timer might, since it makes the logic easier.
    * @param pclk elapsed number of PCLK cycles
    */
-  public void tick(int pclk); 
+  public void tick(int Lpclk);
+  public int peek(int i, int bytes); 
 }

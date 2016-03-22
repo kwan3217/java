@@ -48,6 +48,17 @@ public class Datapath {
   public void APSR_setZ(int Z) {APSR_setZ(Z!=0);};
   public boolean inIT=false;
   public int cycles=0; //Number of cycles since reset
+  public int peek(int address, int bytes) { 
+    for(MemoryMappedDevice i:devices) {
+      if(address>=i.getBase() && address<i.getBase()+i.getSize()) {
+        return i.peek(address-i.getBase(), bytes);
+      }
+    }
+    throw new RuntimeException(String.format("Memory at 0x%08x not mapped to anything",address));
+  };
+  public int peek4(int address) {return peek(address,4);} 
+  public int peek2(int address) {return peek(address,2);} 
+  public int peek1(int address) {return peek(address,1);}
   public int readMem(int address, int bytes) { 
     for(MemoryMappedDevice i:devices) {
       if(address>=i.getBase() && address<i.getBase()+i.getSize()) {

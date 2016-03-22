@@ -882,6 +882,24 @@ public enum Operation {
       }
     }
   },
+  MVNimm {
+    @Override public void execute(Datapath datapath, DecodedInstruction ins) {
+      ResultWithCarry r;
+      r=datapath.ThumbExpandImmWithC(ins.imm);
+      if(datapath.ConditionPassed(ins.cond)) {
+        r.result=~r.result;
+        System.out.printf("Moving %08x into r%d", r.result,ins.Rd);
+        datapath.r[ins.Rd]=r.result;
+        if(datapath.shouldSetFlags(ins.setflags)) {
+          datapath.APSR_setN(parseBit(r.result,31));
+          datapath.APSR_setZ(r.result==0);
+          datapath.APSR_setC(r.carry_out);
+          System.out.printf(", N=%d, Z=%d, C=%d", datapath.APSR_N()?1:0, datapath.APSR_Z()?1:0, datapath.APSR_C()?1:0);
+        }
+      }
+      System.out.println();
+    }
+  },
   UNDEFINED {
     @Override public void execute(Datapath datapath, DecodedInstruction ins) {
       throw new Undefined(String.format("Undefined instruction %08x at pc %08x",ins.imm,ins.pc));
