@@ -2,6 +2,9 @@ package org.kwansystems.emulator.arm;
 
 import static org.kwansystems.emulator.arm.BitFiddle.*;
 
+import org.kwansystems.emulator.arm.encoding.Thumb2DecodeLine;
+import org.kwansystems.emulator.arm.encoding.ThumbFloatingPointDecodeLine;
+
 /** The documentation for an ARM processor is quite complete, and appears to be sufficient to completely 
  * emulate the chip. It is documented in an extremely structured manner. The document is full of pseudocode,
  * which details exactly what the hardware is doing in an unambiguous manner.
@@ -31,7 +34,7 @@ import static org.kwansystems.emulator.arm.BitFiddle.*;
  * The encoding-specific operations either set up the default values or pull them from the correct part of the
  * instruction data, so that the execution unit doesn't know or care which encoding was used.
  * 
- *  To model this, we will borrow a concept from the 8051 control store. That chip has a ROM built into it. When an
+ *  To model this, we will borrow a concept from the 6502 control store. That chip has a ROM built into it. When an
  *  instruction is decoded, it is checked against each row of the ROM. Each row has a field describing what bits
  *  in the instruction must be 1, what must be 0 (and also what phase of the instruction we are on, but we don't
  *  use the concept of phasing in ARM). Each row controls one of the control signals, so if that row's bits match
@@ -46,7 +49,7 @@ import static org.kwansystems.emulator.arm.BitFiddle.*;
  *  Using this method, we could in principle have one table for THUMB mode and a different one for ARM mode. The 
  *  current processor mode selects which table is used.
  */
-public class Thumb2Decode extends Decode {
+public class CortexMDecode extends Decode {
   public static final int N=-1;
   public void flushPipeline() {
     hw1Thumb=0;
@@ -75,18 +78,9 @@ public class Thumb2Decode extends Decode {
     result.is32=thumb32;
     return result;
   }
-  /** Only for human consumption, allows entry of instruction data in the same form that 
-   * assembly listings display it
-   * @param IRlo Low halfword of instruction, always printed on the left
-   * @param IRhi High halfword, always printed on the right.
-   * @return
-   */
-  public DecodedInstruction decode(int IRlo, int IRhi, int pc) {
-    hw1ThumbValid=false;
-    return decode(IRlo | IRhi<<16,pc);
-  }
-  public Thumb2Decode() {
-    lines=Thumb2DecodeLine.values();
+  public CortexMDecode() {
+    lines.put("Thumb2",Thumb2DecodeLine.values());
+    lines.put("VFP",ThumbFloatingPointDecodeLine.values()); //We always decode these, but only conditionally execute them as determined in FloatingPointOperation
   }
 }
 

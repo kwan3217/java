@@ -1,36 +1,46 @@
-package org.kwansystems.emulator.arm;
+package org.kwansystems.emulator.arm.encoding;
 
-import static org.kwansystems.emulator.arm.BitFiddle.*;
-import static org.kwansystems.emulator.arm.Operation.*;
+import static org.kwansystems.emulator.arm.IntegerOperation.*;
 import static org.kwansystems.emulator.arm.Decode.*;
+import static org.kwansystems.emulator.arm.DecodeLine.*;
+import static org.kwansystems.emulator.arm.BitFiddle.*;
 
+import org.kwansystems.emulator.arm.BitFiddle;
+import org.kwansystems.emulator.arm.ConditionCode;
+import org.kwansystems.emulator.arm.Datapath;
+import org.kwansystems.emulator.arm.Decode;
+import org.kwansystems.emulator.arm.DecodeLine;
+import org.kwansystems.emulator.arm.DecodedInstruction;
+import org.kwansystems.emulator.arm.IntegerOperation;
+import org.kwansystems.emulator.arm.Operation;
+import org.kwansystems.emulator.arm.SRType;
 import org.kwansystems.emulator.arm.Decode.DecodeShiftReturn;
 import org.kwansystems.emulator.arm.DecodedInstruction.SetFlags;
+
+import java.util.*;
 
 public enum Thumb2DecodeLine implements DecodeLine {
   LDRlitT1("01001/ddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,8,3);
-      ins.imm=parse(IR,0,8)<<2;
+      ins.Rd=parse(this,IR,"d");
+      ins.imm=parse(this,IR,"i")<<2;
       ins.add=true;
       return true;
     }
   },
   LDRlitT2("11111/00/0/U/10/1/1111//dddd/iiiiiiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int hw1=IR & 0xFFFF;
-      int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,12,4);
-      ins.imm=parse(hw2,0,12);
-      ins.add=parseBit(hw1,7);
+      ins.Rd=parse(this,IR,"d");
+      ins.imm=parse(this,IR,"i");
+      ins.add=parseBit(this,IR,"U");
       return true;
     }
   },
   LDRimmT1("011/0/1/iiiii/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,6,5)<<2;
-      ins.Rn=parse(IR,3,3);
-      ins.Rd=parse(IR,0,3);
+      ins.imm=parse(this,IR,"i")<<2;
+      ins.Rn=parse(this,IR,"n");
+      ins.Rd=parse(this,IR,"d");
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -39,9 +49,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRimmT2("1001/1/ddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,0,8)<<2;
+      ins.imm=parse(this,IR,"i")<<2;
       ins.Rn=13;
-      ins.Rd=parse(IR,8,3);
+      ins.Rd=parse(this,IR,"d");
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -50,11 +60,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRimmT3("11111/00/0/1/10/1/nnnn//dddd/iiiiiiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int hw1=IR & 0xFFFF;
-      int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2,0,12);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rd=parse(hw2,12,4);
+      ins.imm=parse(this,IR,"i");
+      ins.Rn=parse(this,IR,"n");
+      ins.Rd=parse(this,IR,"d");
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -64,14 +72,12 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRimmT4("11111/00/0/0/10/1/nnnn//dddd/1PUW/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int hw1=IR & 0xFFFF;
-      int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2,0,8);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rd=parse(hw2,12,4);
-      int P=parseBit(hw2,10)?1:0;
-      int U=parseBit(hw2, 9)?1:0;
-      int W=parseBit(hw2, 8)?1:0;
+      ins.imm=parse(this,IR,"i");
+      ins.Rn=parse(this,IR,"n");
+      ins.Rd=parse(this,IR,"d");
+      int P=parseBit(this,IR,"P")?1:0;
+      int U=parseBit(this,IR,"U")?1:0;
+      int W=parseBit(this,IR,"W")?1:0;
       ins.index=P==1;
       ins.add=U==1;
       ins.wback=W==1;
@@ -84,9 +90,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   ANDregT1("010000/0000/mmm/dnd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
+      ins.Rd=parse(this,IR,"d");
       ins.Rn=ins.Rd;
-      ins.Rm=parse(IR,3,3);
+      ins.Rm=parse(this,IR,"m");
       ins.setflags=DecodedInstruction.SetFlags.NOT_IN_IT;
       ins.shift_t=SRType.NONE;
       ins.shift_n=0;
@@ -97,11 +103,11 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(IR,3,3);
-      ins.setflags=parseBit(hw1,4)?DecodedInstruction.SetFlags.TRUE:DecodedInstruction.SetFlags.FALSE;
-      DecodeShiftReturn r=DecodeImmShift(parse(hw2,4,2),parse(hw2,12,3)<<2|parse(hw2,6,2));
+      ins.Rd=parse(this,IR,"d");
+      ins.Rn=parse(this,IR,"n");
+      ins.Rm=parse(this,IR,"m");
+      ins.setflags=parseBit(this,IR,"S")?DecodedInstruction.SetFlags.TRUE:DecodedInstruction.SetFlags.FALSE;
+      DecodeShiftReturn r=DecodeImmShift(parse(this,IR,"t"),parse(this,IR,"iii")<<2|parse(this,IR,"ii"));
       ins.shift_t=r.shift_t;
       ins.shift_n=r.shift_n;
       if(ins.Rd==15 && ins.setflags==DecodedInstruction.SetFlags.TRUE) return false; //SEE TST (register) on page 4-399
@@ -111,9 +117,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   STRimmT1("011/0/0/iiiii/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.imm=parse(IR,6,5)<<2;
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.imm=BitFiddle.parse(IR,6,5)<<2;
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -122,9 +128,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   STRimmT2("1001/0/ddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,8,3);
+      ins.Rd=BitFiddle.parse(IR,8,3);
       ins.Rn=13;
-      ins.imm=parse(IR,0,8)<<2;
+      ins.imm=BitFiddle.parse(IR,0,8)<<2;
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -136,9 +142,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,12,4);
-      ins.Rn=parse(hw1, 0,4);
-      ins.imm=parse(hw2,0,12);
+      ins.Rd=BitFiddle.parse(hw2,12,4);
+      ins.Rn=BitFiddle.parse(hw1, 0,4);
+      ins.imm=BitFiddle.parse(hw2,0,12);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -151,12 +157,12 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,12,4);
-      ins.Rn=parse(hw1, 0,4);
-      ins.imm=parse(hw2,0,8);
-      ins.index=parseBit(hw2,10);
-      ins.add  =parseBit(hw2, 9);
-      ins.wback=parseBit(hw2, 8);
+      ins.Rd=BitFiddle.parse(hw2,12,4);
+      ins.Rn=BitFiddle.parse(hw1, 0,4);
+      ins.imm=BitFiddle.parse(hw2,0,8);
+      ins.index=BitFiddle.parseBit(hw2,10);
+      ins.add  =BitFiddle.parseBit(hw2, 9);
+      ins.wback=BitFiddle.parseBit(hw2, 8);
       if(ins.index && ins.add && !ins.wback) return false; //SEE STRT on page 4-363
       if(ins.Rn==15 || (!ins.index && !ins.wback))    {ins.op=UNDEFINED;     return true;}
       if(ins.Rd==15 || (ins.wback && ins.Rn==ins.Rd)) {ins.op=UNPREDICTABLE; return true;}
@@ -165,8 +171,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   CMPregT1("010000/1010/mmm/nnn") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rn=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rn=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.shift_t=SRType.NONE;
       ins.shift_n=0;
       return true;
@@ -174,8 +180,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   CMPregT2("010001/01/N/mmmm/nnn") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rn=parse(IR,7,1)<<3 | parse(IR,0,3);
-      ins.Rm=parse(IR,3,4);
+      ins.Rn=BitFiddle.parse(IR,7,1)<<3 | BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,4);
       ins.shift_t=SRType.NONE;
       ins.shift_n=0;
       if(ins.Rn<8 && ins.Rm<8) {ins.op=UNPREDICTABLE; return true;}
@@ -187,10 +193,10 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      int type=parse(hw2,4,2);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      int type=BitFiddle.parse(hw2,4,2);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       DecodeShiftReturn r=DecodeImmShift(type,ins.imm);
       ins.shift_n=r.shift_n;
       ins.shift_t=r.shift_t;
@@ -200,9 +206,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   ITT1("1011/1111/cccc/mmmm") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.mask=parse(IR,0,4);
+      ins.mask=BitFiddle.parse(IR,0,4);
       if(ins.mask==0b0000) return false; //SEE NOP-compatible int instructions on page 3-32
-      ins.firstcond=parse(IR,4,4);
+      ins.firstcond=BitFiddle.parse(IR,4,4);
       if(ins.firstcond==0b0000) {ins.op=UNPREDICTABLE; return true;}
       if(ins.firstcond==0b1110 && BitCount(ins.mask)!=1) {ins.op=UNPREDICTABLE; return true;}
       return true;
@@ -210,8 +216,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   BT1("1101/cccc/iiiiiiii") { //Conditional branch, not usable inside an IT block
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=signExtend(parse(IR,0,8)<<1,9);
-      int cond=parse(IR,8,4);
+      ins.imm=signExtend(BitFiddle.parse(IR,0,8)<<1,9);
+      int cond=BitFiddle.parse(IR,8,4);
       if(cond==0x1110) return false; //SEE Permanently Undefined Space on page 3-36
       if(cond==0x1111) return false; //SEE SVC (formerly SWI) on page 4-375
       ins.cond=ConditionCode.enumValues[cond];
@@ -221,7 +227,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   BT2("11100/iiiiiiiiiii") { //Unconditional branch, usable outside of or as last instruction of IT block 
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=signExtend(parse(IR,0,11)<<1,12);
+      ins.imm=signExtend(BitFiddle.parse(IR,0,11)<<1,12);
       //TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
     }
@@ -234,13 +240,13 @@ public enum Thumb2DecodeLine implements DecodeLine {
       int len=0;
       ins.imm=0;
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,0                );bitpos+=len; //0
-      len=11;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm11
-      len= 6;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1, 0,len));bitpos+=len; //imm6
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,13,len));bitpos+=len; //J1
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,11,len));bitpos+=len; //J2
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //S
+      len=11;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm11
+      len= 6;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1, 0,len));bitpos+=len; //imm6
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,13,len));bitpos+=len; //J1
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,11,len));bitpos+=len; //J2
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //S
       ins.imm=signExtend(ins.imm,bitpos);
-      int cond=parse(IR,8,4);
+      int cond=BitFiddle.parse(IR,8,4);
       if(parse(cond,1,3)==0x111) return false; //SEE branches, miscellaneous control instructions on page 3-31
       ins.cond=ConditionCode.enumValues[cond];
       //TODO - if InITBlock() then UNPREDICTABLE;
@@ -251,11 +257,11 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      int S=parse(hw1,10,1);
-      int I1=1-(parse(hw2,13,1) ^ S);
-      int I2=1-(parse(hw2,11,1) ^ S);
-      int imm11=parse(hw2, 0,11);
-      int imm10=parse(hw1, 0,10);
+      int S=BitFiddle.parse(hw1,10,1);
+      int I1=1-(BitFiddle.parse(hw2,13,1) ^ S);
+      int I2=1-(BitFiddle.parse(hw2,11,1) ^ S);
+      int imm11=BitFiddle.parse(hw2, 0,11);
+      int imm10=BitFiddle.parse(hw1, 0,10);
       int bitpos=0;
       int len=1;
       ins.imm=0;
@@ -272,9 +278,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   MOVimmT1("001/00/ddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,8,3);
+      ins.Rd=BitFiddle.parse(IR,8,3);
       ins.setflags=SetFlags.NOT_IN_IT;
-      ins.imm=parse(IR,0,8);
+      ins.imm=BitFiddle.parse(IR,0,8);
       return true;
     }    
   },
@@ -282,14 +288,14 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.setflags=BitFiddle.parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
       int bitpos=0;
       int len;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true; //Can't evaluate ThumbExpandImmWithC here since APSR.c is an execute stage thing
       return true;
     }    
@@ -298,23 +304,23 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
       if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE; return true;}
       ins.setflags=SetFlags.FALSE;
       int bitpos=0;
       int len;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
-      len= 4;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1, 0,len));bitpos+=len; //imm4
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
+      len= 4;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1, 0,len));bitpos+=len; //imm4
       return true;
     }    
   },
   MOVregT1("010001/10/D/mmmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3) | parse(IR,7,1)<<3;
-      ins.Rm=parse(IR,3,4);
+      ins.Rd=BitFiddle.parse(IR,0,3) | BitFiddle.parse(IR,7,1)<<3;
+      ins.Rm=BitFiddle.parse(IR,3,4);
       ins.setflags=SetFlags.FALSE;
       // TODO - if d==15 && InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
@@ -322,8 +328,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   MOVregT2("000/00/00000/mmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.setflags=SetFlags.TRUE;
       // TODO - if InITBlock() then UNPREDICTABLE;
       return true;
@@ -333,27 +339,27 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rm=parse(hw2,0,4);
-      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      ins.setflags=BitFiddle.parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
       // TODO - if InITBlock() then UNPREDICTABLE;
       return true;
     }
   },
   SUBimmT1("000/11/1/1/iii/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.imm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.imm=BitFiddle.parse(IR,6,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       return true;
     }
   },
   SUBimmT2("001/11/DDD/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,8,3);
-      ins.Rn=parse(IR,8,3);
-      ins.imm=parse(IR,0,8);
+      ins.Rd=BitFiddle.parse(IR,8,3);
+      ins.Rn=BitFiddle.parse(IR,8,3);
+      ins.imm=BitFiddle.parse(IR,0,8);
       ins.setflags=SetFlags.NOT_IN_IT;
       return true;
     }
@@ -362,17 +368,17 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.setflags=BitFiddle.parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
       if(ins.Rd==0b1111 && ins.setflags==SetFlags.TRUE) return false; //SEE CMP (immediate)
       if(ins.Rn==0b1101) return false; //SEE SUB (SP minus immediate)
       int bitpos=0;
       int len;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rd==13 || (ins.Rd==15 && ins.setflags==SetFlags.FALSE) || ins.Rn==15) {ins.op=UNPREDICTABLE; return true;}
       return true;
@@ -382,26 +388,26 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       ins.setflags=SetFlags.FALSE;
       if(ins.Rd==0b1111) return false; //SEE ADR
       if(ins.Rn==0b1101) return false; //SEE SUB (SP minus immediate)
       int bitpos=0;
       int len;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE; return true;}
       return true;
     }
   },
   SUBregT1("000/11/0/1/mmm/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.Rm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.Rm=BitFiddle.parse(IR,6,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       ins.shift_t=SRType.LSL;
       ins.shift_n=0;
@@ -412,13 +418,13 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
-      ins.Rn=parse(hw1,0,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.setflags=BitFiddle.parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       if(ins.Rd==0b1111 && ins.setflags==SetFlags.TRUE) return false; //SEE CMP (register)
       if(ins.Rn==0b1101) return false; //SEE SUB(SP minus register)
-      ins.Rm=parse(hw2,6,3);
-      DecodeShiftReturn r=DecodeImmShift(parse(hw2,4,2),parse(hw2,6,2) | (parse(hw2,12,3)<<2));
+      ins.Rm=BitFiddle.parse(hw2,6,3);
+      DecodeShiftReturn r=DecodeImmShift(BitFiddle.parse(hw2,4,2),BitFiddle.parse(hw2,6,2) | (BitFiddle.parse(hw2,12,3)<<2));
       ins.shift_t=r.shift_t;
       ins.shift_n=r.shift_n;
       if(ins.Rd==13 || (ins.Rd==15 && ins.setflags==SetFlags.FALSE) || ins.Rn==15 || (ins.Rm==13 || ins.Rm==15)) {ins.op=UNPREDICTABLE; return true;}
@@ -427,7 +433,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   BXT1("010001/11/0/mmmm/ooo") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rm=parse(IR,3,4);
+      ins.Rm=BitFiddle.parse(IR,3,4);
       // TODO - if d==15 && InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
     }
@@ -436,8 +442,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.wback=parseBit(hw1,5);
-      ins.Rn=parse(hw1,0,4);
+      ins.wback=BitFiddle.parseBit(hw1,5);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       if(ins.wback && ins.Rn==0b1101) {
         return false; //SEE PUSH
       }
@@ -451,7 +457,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   PUSHT1("1011/0/10/M/rrrrrrrr") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,8,1) << 14 | parse(IR,0,8);
+      ins.imm=BitFiddle.parse(IR,8,1) << 14 | BitFiddle.parse(IR,0,8);
       ins.UnalignedAllowed=false;
       if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 1 or 0 registers, it's UNPREDICTABLE
       return true;
@@ -474,7 +480,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
       //use imm as the register list
-      ins.Rd=parse(hw2,12,4);
+      ins.Rd=BitFiddle.parse(hw2,12,4);
       ins.imm=1<<ins.Rd; //Just push one register
       if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE; return true;}
       ins.UnalignedAllowed=true;
@@ -485,17 +491,17 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      boolean S=parseBit(hw1,10);
-      boolean J1=parseBit(hw2,13);
-      boolean J2=parseBit(hw2,11);
+      boolean S=BitFiddle.parseBit(hw1,10);
+      boolean J1=BitFiddle.parseBit(hw2,13);
+      boolean J2=BitFiddle.parseBit(hw2,11);
       int I1=(!(J1^S))?1:0;
       int I2=(!(J2^S))?1:0;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,0                );bitpos+=len; //0
-      len=11;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm11
-      len=10;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1, 0,len));bitpos+=len; //imm10
+      len=11;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm11
+      len=10;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1, 0,len));bitpos+=len; //imm10
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,I2               );bitpos+=len; //I2
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,I1               );bitpos+=len; //I1
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,S?1:0            );bitpos+=len; //S
@@ -507,15 +513,15 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
+      ins.setflags=BitFiddle.parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       int bitpos=0;
       int len=1;
       ins.imm=0; 
       len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse   (hw2, 0,len)    );bitpos+=len; //imm8
       len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse   (hw2,12,len)    );bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parseBit(hw1,10    )?1:0);bitpos+=len; //i
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parseBit(hw1,10    )?1:0);bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rd==13 || ins.Rd==15 || ins.Rn==13 || ins.Rn==15) {ins.op=UNPREDICTABLE; return true;}
       return true;
@@ -525,19 +531,19 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      if(parse(hw2,12,4)!=0b1111) {ins.op=UNPREDICTABLE; return true;}
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
+      if(BitFiddle.parse(hw2,12,4)!=0b1111) {ins.op=UNPREDICTABLE; return true;}
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
       if(ins.Rd==13 || ins.Rd==15 || ins.Rn==13 || ins.Rn==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE; return true;}
       return true;
     }    
   },
   ADDregT1("000/11/0/0/mmm/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.Rm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.Rm=BitFiddle.parse(IR,6,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       ins.shift_t=SRType.LSL;
       ins.shift_n=0;
@@ -546,12 +552,12 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   ADDregT2("010001/00/D/mmmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int dn=parse(IR,7,1) << 3 | parse(IR,0,3);
-      ins.Rm=parse(IR,3,4);
+      int dn=BitFiddle.parse(IR,7,1) << 3 | BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,4);
       if(dn==0b1101 || ins.Rm==0b1101) return false; //SEE add (SP plus register)
       ins.Rd=dn;
       ins.Rn=dn;
-      ins.Rm=parse(IR,3,4);
+      ins.Rm=BitFiddle.parse(IR,3,4);
       ins.setflags=SetFlags.FALSE;
       ins.shift_t=SRType.LSL;
       ins.shift_n=0;
@@ -564,15 +570,15 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      boolean S=parseBit(hw1,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
       if(ins.Rd==0b1111 && S) return false; //SEE CMN (register)
       if(ins.Rn==0b1101)      return false; //SEE ADD (SP plus register)
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
-      int type=parse(hw2,4,2);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      int type=BitFiddle.parse(hw2,4,2);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       DecodeShiftReturn r=DecodeImmShift(type,ins.imm);
       ins.shift_n=r.shift_n;
       ins.shift_t=r.shift_t;
@@ -582,18 +588,18 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   ADDimmT1("000/11/1/0/iii/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.imm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.imm=BitFiddle.parse(IR,6,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       return true;
     }    
   },
   ADDimmT2("001/10/ddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,8,3);
-      ins.Rn=parse(IR,8,3);
-      ins.imm=parse(IR,0,8);
+      ins.Rd=BitFiddle.parse(IR,8,3);
+      ins.Rn=BitFiddle.parse(IR,8,3);
+      ins.imm=BitFiddle.parse(IR,0,8);
       ins.setflags=SetFlags.NOT_IN_IT;
       return true;
     }
@@ -602,19 +608,19 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      boolean S=parseBit(hw1,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
       if(ins.Rd==0b1111 && S) return false; //SEE CMN (immediate)
       if(ins.Rn==0b1101)      return false; //SEE ADD (SP plus immediate)
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rd==13 || (ins.Rd==15 && !S) || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -624,17 +630,17 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       if(ins.Rn==0b1111) return false; //SEE ADR
       if(ins.Rn==0b1101) return false; //SEE ADD (SP plus immediate)
       ins.setflags=SetFlags.FALSE;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -642,8 +648,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   CMPimmT1("001/01/nnn/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rn=parse(IR,8,3);
-      ins.imm=parse(IR,0,8);
+      ins.Rn=BitFiddle.parse(IR,8,3);
+      ins.imm=BitFiddle.parse(IR,0,8);
       return true;
     }
   },
@@ -651,13 +657,13 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rn=parse(hw1,0,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -667,17 +673,17 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rn=parse(hw1,0,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       if(ins.Rn==15) return false; //SEE MOV (immediate)
-      ins.Rd=parse(hw2,8,4);
-      boolean S=parseBit(hw1,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rd==13 || ins.Rd==15 || ins.Rn==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -687,17 +693,17 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rn=parse(hw1,0,4);
-      ins.Rd=parse(hw2,8,4);
-      boolean S=parseBit(hw1,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
       if(ins.Rn==0b1111 && S) return false; //SEE TST (immediate)
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.thumbExpand=true;
       if(ins.Rd==13 || (ins.Rd==15 && !S)) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -705,9 +711,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   ORRregT1("010000/1100/mmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       ins.shift_t=SRType.LSL;
       ins.shift_n=0;
@@ -718,14 +724,14 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      boolean S=parseBit(hw1,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
       if(ins.Rn==0b1111)      return false; //SEE "Related Encodings"
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
-      int type=parse(hw2,4,2);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      int type=BitFiddle.parse(hw2,4,2);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       DecodeShiftReturn r=DecodeImmShift(type,ins.imm);
       ins.shift_n=r.shift_n;
       ins.shift_t=r.shift_t;
@@ -737,14 +743,14 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      boolean P=parseBit(hw1,8);
-      boolean U=parseBit(hw1,7);
-      boolean W=parseBit(hw1,5);
+      boolean P=BitFiddle.parseBit(hw1,8);
+      boolean U=BitFiddle.parseBit(hw1,7);
+      boolean W=BitFiddle.parseBit(hw1,5);
       if(!P && !W)      return false; //SEE "Related Encodings"
-      ins.Rd=parse(hw2,12,4);
-      ins.Rn=parse(hw1, 0,4);
-      ins.Rm=parse(hw2, 8,4); //Use Rm for Rt2
-      ins.imm=parse(hw2,0,8)<<2;
+      ins.Rd=BitFiddle.parse(hw2,12,4);
+      ins.Rn=BitFiddle.parse(hw1, 0,4);
+      ins.Rm=BitFiddle.parse(hw2, 8,4); //Use Rm for Rt2
+      ins.imm=BitFiddle.parse(hw2,0,8)<<2;
       ins.index=P;
       ins.add=U;
       ins.wback=W;
@@ -755,10 +761,10 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LSLimmT1("000/00/iiiii/mmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,6,5);
+      ins.imm=BitFiddle.parse(IR,6,5);
       if(ins.imm==0b00000) return false; //SEE MOV (register)
-      ins.Rd=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       DecodeShiftReturn r=DecodeImmShift(0b00,ins.imm);
       ins.shift_n=r.shift_n;
@@ -770,11 +776,11 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      boolean S=parseBit(hw1,4);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       if(ins.imm==0b00000) return false; //SEE MOV (register)
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       DecodeShiftReturn r=DecodeImmShift(0b00,ins.imm);
@@ -786,8 +792,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDMT1("1100/1/nnn/rrrrrrrr") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm= parse(IR,0,8);
-      ins.Rn=  parse(IR,8,3);
+      ins.imm= BitFiddle.parse(IR,0,8);
+      ins.Rn=  BitFiddle.parse(IR,8,3);
       ins.wback=!parseBit(ins.imm,ins.Rn); //Write back if and only if we are not loading the register used as the address 
       if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 0 registers, it's UNPREDICTABLE
       return true;
@@ -798,12 +804,12 @@ public enum Thumb2DecodeLine implements DecodeLine {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
       //use imm as the register list
-      ins.wback=parseBit(hw1,5);
-      ins.Rn=parse(hw1,0,4);
+      ins.wback=BitFiddle.parseBit(hw1,5);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       if(ins.wback && ins.Rn==0b1101) return false; //SEE POP (Thumb)
       ins.imm=hw2; //Nominally bits 13 and 15 (specifying sp and pc) are supposed to be zero, and it is UNPREDICTABLE if they are not. We will take advantage of that
-      boolean P=parseBit(hw2,15);
-      boolean M=parseBit(hw2,14);
+      boolean P=BitFiddle.parseBit(hw2,15);
+      boolean M=BitFiddle.parseBit(hw2,14);
       if(ins.Rn==15 || BitCount(ins.imm)<2 || (P && M)) {ins.op=UNPREDICTABLE; return true;} //If we are using pc as the stack pointer, or loading 1 or 0 registers, or loading both PC and LR, it's UNPREDICTABLE
       //TODO - if registers<15> == '1' && InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       if(ins.wback && parseBit(ins.imm,ins.Rn))         {ins.op=UNPREDICTABLE; return true;} //If we write back to a register we are also storing, it's UNPREDICTABLE.
@@ -812,7 +818,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   POPT1("1011/1/10/P/rrrrrrrr") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm= parse(IR,0,8) | parse(IR,8,1)<<15;
+      ins.imm= BitFiddle.parse(IR,0,8) | BitFiddle.parse(IR,8,1)<<15;
       ins.UnalignedAllowed=false;
       if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are pushing 0 registers, it's UNPREDICTABLE
       return true;
@@ -825,8 +831,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
       //use imm as the register list
       ins.imm=hw2; //Nominally bit 13 (specifying sp) is supposed to be zero, and it is UNPREDICTABLE if it is not. We will take advantage of that
       ins.UnalignedAllowed=false;
-      boolean P=parseBit(hw2,15);
-      boolean M=parseBit(hw2,14);
+      boolean P=BitFiddle.parseBit(hw2,15);
+      boolean M=BitFiddle.parseBit(hw2,14);
       if(BitCount(ins.imm)<2 || (P && M)) {ins.op=UNPREDICTABLE; return true;} //If we are loading 1 or 0 registers, or loading both PC and LR, it's UNPREDICTABLE
       //TODO - if registers<15> == '1' && InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
@@ -837,7 +843,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
       //use imm as the register list
-      int t=parse(hw2,12,4);
+      int t=BitFiddle.parse(hw2,12,4);
       ins.imm=1<<t;
       ins.UnalignedAllowed=false;
       if(t==13 /*...*/) {ins.op=UNPREDICTABLE; return true;} //If we are loading 1 or 0 registers, or loading both PC and LR, it's UNPREDICTABLE
@@ -847,8 +853,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   TSTregT1("010000/1000/mmm/nnn") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rn=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rn=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.shift_t=SRType.LSL;
       ins.shift_n=0;
       return true;
@@ -858,10 +864,10 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      int type=parse(hw2,4,2);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      int type=BitFiddle.parse(hw2,4,2);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       DecodeShiftReturn r=DecodeImmShift(type,ins.imm);
       ins.shift_n=r.shift_n;
       ins.shift_t=r.shift_t;
@@ -871,8 +877,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   STMIAT1("1100/0/nnn/rrrrrrrr") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,0,8);
-      ins.Rn=parse(IR,8,3);
+      ins.imm=BitFiddle.parse(IR,0,8);
+      ins.Rn=BitFiddle.parse(IR,8,3);
       ins.wback=true;
       if(BitCount(ins.imm)<1) {ins.op=UNPREDICTABLE; return true;} //If we are storing 0 registers, it's UNPREDICTABLE
       return true;
@@ -882,8 +888,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rn=parse(hw1,0,4);
-      ins.wback=parseBit(hw1,5);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.wback=BitFiddle.parseBit(hw1,5);
       //use imm as the register list
       ins.imm=hw2; //Nominally bits 13 and 15 (specifying sp and pc) are supposed to be zero, and it is UNPREDICTABLE if they are not. We will take advantage of that
       if((ins.imm & 0b1010000000000000)!=0) {ins.op=UNPREDICTABLE; return true;} 
@@ -895,9 +901,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRregT1("0101/100/mmm/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.Rm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.Rm=BitFiddle.parse(IR,6,3);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -910,37 +916,37 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,12,4);
-      ins.Rn=parse(hw1, 0,4);
-      ins.Rm=parse(hw2, 0,4);
+      ins.Rd=BitFiddle.parse(hw2,12,4);
+      ins.Rn=BitFiddle.parse(hw1, 0,4);
+      ins.Rm=BitFiddle.parse(hw2, 0,4);
       ins.index=true; //The specification doesn't say anything about these flags, so we copy the same values from the T1 encoding
       ins.add=true;
       ins.wback=false;
       if(ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE; return true;}
       // TODO - handle other UNPREDICTABLE case
       ins.shift_t=SRType.LSL;
-      ins.shift_n=parse(hw2,4,2);
+      ins.shift_n=BitFiddle.parse(hw2,4,2);
       return true;
     }
   },
   CBZT1("1011/f/0/i/1/iiiii/nnn") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rn=parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,0,3);
       ins.nonzero=parseBit(IR,11);
       int bitpos=0;
       int len=1;
       ins.imm=0; 
       len= 1;ins.imm=writeField(ins.imm,bitpos,len,0              );bitpos+=len; //0
-      len= 5;ins.imm=writeField(ins.imm,bitpos,len,parse(IR,3,len));bitpos+=len; //imm5
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(IR,9,len));bitpos+=len; //i
+      len= 5;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(IR,3,len));bitpos+=len; //imm5
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(IR,9,len));bitpos+=len; //i
       return true;
     }
   },
   ADDspimmT1("1010/1/ddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,8,3);
+      ins.Rd=BitFiddle.parse(IR,8,3);
       ins.setflags=SetFlags.FALSE;
-      ins.imm=parse(IR,0,8)<<2;
+      ins.imm=BitFiddle.parse(IR,0,8)<<2;
       return true;
     }
   },
@@ -948,7 +954,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       ins.Rd=13;
       ins.setflags=SetFlags.FALSE;
-      ins.imm=parse(IR,0,7)<<2;
+      ins.imm=BitFiddle.parse(IR,0,7)<<2;
       return true;
     }
   },
@@ -956,16 +962,16 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2, 8,4);
-      boolean S=parseBit(hw1,4);
+      ins.Rd=BitFiddle.parse(hw2, 8,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
       if(ins.Rd==0b1111 && S) return false; //SEE CMN (immediate)
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       ins.imm=Datapath.ThumbExpandImm(ins.imm,false).result;
       if(ins.Rd==15 && !S) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -975,23 +981,23 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2, 8,4);
+      ins.Rd=BitFiddle.parse(hw2, 8,4);
       ins.setflags=SetFlags.FALSE;
       int bitpos=0;
       int len=1;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
       if(ins.Rd==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
     }
   },
   ASRimmT1("000/10/iiiii/mmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,6,5);
-      ins.Rd=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.imm=BitFiddle.parse(IR,6,5);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       DecodeShiftReturn r=DecodeImmShift(0b10,ins.imm);
       ins.shift_n=r.shift_n;
@@ -1003,10 +1009,10 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rm=parse(hw2,0,4);
-      boolean S=parseBit(hw1,4);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       DecodeShiftReturn r=DecodeImmShift(0b10,ins.imm);
       ins.shift_n=r.shift_n;
@@ -1017,7 +1023,7 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   BLXT1("010001/11/1/mmmm/ooo") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rm=parse(IR,3,4);
+      ins.Rm=BitFiddle.parse(IR,3,4);
       if(ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       // TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       return true;
@@ -1027,10 +1033,10 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2, 8,4);
-      ins.Rn=parse(hw1, 0,4);
-      ins.Rm=parse(hw2, 0,4);
-      ins.Ra=parse(hw2,12,4);
+      ins.Rd=BitFiddle.parse(hw2, 8,4);
+      ins.Rn=BitFiddle.parse(hw1, 0,4);
+      ins.Rm=BitFiddle.parse(hw2, 0,4);
+      ins.Ra=BitFiddle.parse(hw2,12,4);
       if(ins.Rd==13 || ins.Rd==15 || 
           ins.Rn==13 || ins.Rn==15 ||
           ins.Rm==13 || ins.Rm==15 ||
@@ -1040,9 +1046,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRBimmT1("011/1/1/iiiii/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,6,5);
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
+      ins.imm=BitFiddle.parse(IR,6,5);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -1053,9 +1059,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2, 0,12);
-      ins.Rd =parse(hw2,12, 4);
-      ins.Rn =parse(hw1, 0, 4);
+      ins.imm=BitFiddle.parse(hw2, 0,12);
+      ins.Rd =BitFiddle.parse(hw2,12, 4);
+      ins.Rn =BitFiddle.parse(hw1, 0, 4);
       if(ins.Rd==0b1111) return false; //SEE PLD;
       if(ins.Rn==0b1111) return false; //SEE LDRB (literal);
       ins.index=true;
@@ -1066,14 +1072,12 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRBimmT3("11111/00/0/0/00/1/nnnn//dddd/1/P/U/W/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int hw1=IR & 0xFFFF;
-      int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2, 0, 8);
-      ins.Rd =parse(hw1,12, 4);
-      ins.Rn =parse(hw1, 0, 4);
-      boolean P=parseBit(hw2,10);
-      boolean U=parseBit(hw2, 9);
-      boolean W=parseBit(hw2, 8);
+      ins.imm=parse(this,IR,"i");
+      ins.Rd =parse(this,IR,"d");
+      ins.Rn =parse(this,IR,"n");
+      boolean P=parseBit(this,IR,"P");
+      boolean U=parseBit(this,IR,"U");
+      boolean W=parseBit(this,IR,"W");
       if(ins.Rd==0b1111&& P && !U && !W) return false; //SEE PLD (immediate);
       if(ins.Rn==0b1111) return false; //SEE LDRB (literal);
       if(P && U && !W) return false; //SEE LRDBT;
@@ -1089,8 +1093,8 @@ public enum Thumb2DecodeLine implements DecodeLine {
   UXTBT1("1011/0010/11/mmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       ins.imm=0; //use this for the rotation value
-      ins.Rd=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       return true;
     }
   },
@@ -1098,17 +1102,17 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2,4,2)<<3; //use this for the rotation value
-      ins.Rd=parse(hw2,8,4);
-      ins.Rm=parse(hw2,0,4);
+      ins.imm=BitFiddle.parse(hw2,4,2)<<3; //use this for the rotation value
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
       return true;
     }
   },
   STRBregT1("0101/010/mmm/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.Rm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.Rm=BitFiddle.parse(IR,6,3);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -1121,14 +1125,14 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rm =parse(hw2, 0, 4);
-      ins.Rd =parse(hw2,12, 4);
-      ins.Rn =parse(hw1, 0, 4);
+      ins.Rm =BitFiddle.parse(hw2, 0, 4);
+      ins.Rd =BitFiddle.parse(hw2,12, 4);
+      ins.Rn =BitFiddle.parse(hw1, 0, 4);
       if(ins.Rn==0b1111) {ins.op=UNDEFINED;return true;}
       ins.index=true;
       ins.add=true;
       ins.wback=false;
-      ins.shift_n=parse(hw2, 4,2);
+      ins.shift_n=BitFiddle.parse(hw2, 4,2);
       ins.shift_t=SRType.LSL;
       if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -1136,10 +1140,10 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LSRimmT1("000/01/iiiii/mmm/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,6,5);
+      ins.imm=BitFiddle.parse(IR,6,5);
       if(ins.imm==0b00000) return false; //SEE MOV (register)
-      ins.Rd=parse(IR,0,3);
-      ins.Rm=parse(IR,3,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rm=BitFiddle.parse(IR,3,3);
       ins.setflags=SetFlags.NOT_IN_IT;
       DecodeShiftReturn r=DecodeImmShift(0b01,ins.imm);
       ins.shift_n=r.shift_n;
@@ -1150,11 +1154,11 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
-      ins.Rm=parse(hw2,0,4);
-      boolean S=parseBit(hw1,4);
-      ins.imm=parse(hw2,12,3)<<2 | parse(hw2,6,2);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.Rm=BitFiddle.parse(hw2,0,4);
+      boolean S=BitFiddle.parseBit(hw1,4);
+      ins.imm=BitFiddle.parse(hw2,12,3)<<2 | BitFiddle.parse(hw2,6,2);
       if(ins.imm==0b00000) return false; //SEE MOV (register)
       ins.setflags=S?SetFlags.TRUE:SetFlags.FALSE;
       DecodeShiftReturn r=DecodeImmShift(0b01,ins.imm);
@@ -1165,9 +1169,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   LDRBregT1("0101/110/mmm/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
-      ins.Rm=parse(IR,6,3);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
+      ins.Rm=BitFiddle.parse(IR,6,3);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -1180,15 +1184,15 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rm =parse(hw2, 0, 4);
-      ins.Rd =parse(hw2,12, 4);
-      ins.Rn =parse(hw1, 0, 4);
+      ins.Rm =BitFiddle.parse(hw2, 0, 4);
+      ins.Rd =BitFiddle.parse(hw2,12, 4);
+      ins.Rn =BitFiddle.parse(hw1, 0, 4);
       if(ins.Rd==0b1111) {return false;} //SEE PLD;
       if(ins.Rn==0b1111) {return false;} //SEE LDRB (literal);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
-      ins.shift_n=parse(hw2, 4,2);
+      ins.shift_n=BitFiddle.parse(hw2, 4,2);
       ins.shift_t=SRType.LSL;
       if(ins.Rd==13 || ins.Rd==15 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
@@ -1196,9 +1200,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   STRBimmT1("011/1/0/iiiii/nnn/ddd") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      ins.imm=parse(IR,6,5);
-      ins.Rd=parse(IR,0,3);
-      ins.Rn=parse(IR,3,3);
+      ins.imm=BitFiddle.parse(IR,6,5);
+      ins.Rd=BitFiddle.parse(IR,0,3);
+      ins.Rn=BitFiddle.parse(IR,3,3);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -1209,9 +1213,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2, 0,12);
-      ins.Rd =parse(hw2,12, 4);
-      ins.Rn =parse(hw1, 0, 4);
+      ins.imm=BitFiddle.parse(hw2, 0,12);
+      ins.Rd =BitFiddle.parse(hw2,12, 4);
+      ins.Rn =BitFiddle.parse(hw1, 0, 4);
       ins.index=true;
       ins.add=true;
       ins.wback=false;
@@ -1221,14 +1225,12 @@ public enum Thumb2DecodeLine implements DecodeLine {
   },
   STRBimmT3("11111/00/0/0/00/0/nnnn//dddd/1/P/U/W/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int hw1=IR & 0xFFFF;
-      int hw2=(IR>>16) & 0xFFFF;
-      ins.imm=parse(hw2, 0, 8);
-      ins.Rd =parse(hw1,12, 4);
-      ins.Rn =parse(hw1, 0, 4);
-      boolean P=parseBit(hw2,10);
-      boolean U=parseBit(hw2, 9);
-      boolean W=parseBit(hw2, 8);
+      ins.imm=parse(this,IR, "i");
+      ins.Rd =parse(this,IR, "d");
+      ins.Rn =parse(this,IR, "n");
+      boolean P=parseBit(this,IR,"P");
+      boolean U=parseBit(this,IR,"U");
+      boolean W=parseBit(this,IR,"W");
       if(P && U && !W) return false; //SEE STRBT;
       if(ins.Rn==0b1111 || !P && !W) {ins.op=UNDEFINED;return true;}
       ins.index=P;
@@ -1242,9 +1244,9 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      ins.Rm =parse(hw2, 0, 4);
-      ins.Rn =parse(hw1, 0, 4);
-      boolean H=parseBit(hw2, 4);
+      ins.Rm =BitFiddle.parse(hw2, 0, 4);
+      ins.Rn =BitFiddle.parse(hw1, 0, 4);
+      boolean H=BitFiddle.parseBit(hw2, 4);
       // TODO - if InITBlock() && !LastInITBlock() then UNPREDICTABLE;
       ins.is_tbh=H;
       if(ins.Rn==13 || ins.Rm==13 || ins.Rm==15) {ins.op=UNPREDICTABLE;return true;}
@@ -1255,32 +1257,92 @@ public enum Thumb2DecodeLine implements DecodeLine {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       int hw1=IR & 0xFFFF;
       int hw2=(IR>>16) & 0xFFFF;
-      int imm2=parse(hw2,6,2);
-      int imm3=parse(hw2,12,3);
-      ins.widthm1=parse(hw2,0,5);
+      int imm2=BitFiddle.parse(hw2,6,2);
+      int imm3=BitFiddle.parse(hw2,12,3);
+      ins.widthm1=BitFiddle.parse(hw2,0,5);
       ins.lsbit=imm3<<2 | imm2;
-      ins.Rd=parse(hw2,8,4);
-      ins.Rn=parse(hw1,0,4);
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
       return true;
     }
   },
   MVNimmT1("11110/i/0/0011/S/1111//0/iii/dddd/iiiiiiii") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
-      int hw1=IR & 0xFFFF;
-      int hw2=(IR>>16) & 0xFFFF;
-      ins.Rd=parse(hw2,8,4);
-      ins.setflags=parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      ins.Rd=parse(this,IR,"dddd");//(hw2,8,4);
+      ins.setflags=parseBit(this,IR,"S")?SetFlags.TRUE:SetFlags.FALSE;
       int bitpos=0;
       int len;
       ins.imm=0; 
-      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2, 0,len));bitpos+=len; //imm8
-      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(hw2,12,len));bitpos+=len; //imm3
-      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(hw1,10,len));bitpos+=len; //i
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,parse(this,IR, "iiiiiiii"));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,parse(this,IR, "iii"     ));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,parse(this,IR, "i"       ));bitpos+=len; //i
       ins.thumbExpand=true; //Can't evaluate ThumbExpandImmWithC here since APSR.c is an execute stage thing
       if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE;return true;}
       return true;
     }    
   },
+  SUBspimmT1("1011/0000/1/iiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      ins.Rd=13;
+      ins.imm=parse(this,IR,"i")<<2;
+      ins.setflags=SetFlags.FALSE;
+      return true;
+    }
+  },
+/*
+   SUBspimmT2("11110/i/0/1101/S/1101//0/iii/dddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=BitFiddle.parse(IR,8,3);
+      boolean S=BitFiddle.parseBit(hw1,4);
+      if(ins.Rd==15 && parseBit(IR))
+      ins.Rn=BitFiddle.parse(IR,8,3);
+      ins.imm=BitFiddle.parse(IR,0,8);
+      ins.setflags=SetFlags.NOT_IN_IT;
+      return true;
+    }
+  },
+  SUBimmT3("11110/i/0/1101/S/nnnn//0/iii/dddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.setflags=BitFiddle.parseBit(hw1,4)?SetFlags.TRUE:SetFlags.FALSE;
+      if(ins.Rd==0b1111 && ins.setflags==SetFlags.TRUE) return false; //SEE CMP (immediate)
+      if(ins.Rn==0b1101) return false; //SEE SUB (SP minus immediate)
+      int bitpos=0;
+      int len;
+      ins.imm=0; 
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
+      ins.thumbExpand=true;
+      if(ins.Rd==13 || (ins.Rd==15 && ins.setflags==SetFlags.FALSE) || ins.Rn==15) {ins.op=UNPREDICTABLE; return true;}
+      return true;
+    }
+  },
+  SUBimmT4("11110/i/1/0101/0/nnnn/0/iii/dddd/iiiiiiii") {
+    @Override public boolean decode(int IR, DecodedInstruction ins) {
+      int hw1=IR & 0xFFFF;
+      int hw2=(IR>>16) & 0xFFFF;
+      ins.Rd=BitFiddle.parse(hw2,8,4);
+      ins.Rn=BitFiddle.parse(hw1,0,4);
+      ins.setflags=SetFlags.FALSE;
+      if(ins.Rd==0b1111) return false; //SEE ADR
+      if(ins.Rn==0b1101) return false; //SEE SUB (SP minus immediate)
+      int bitpos=0;
+      int len;
+      ins.imm=0; 
+      len= 8;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2, 0,len));bitpos+=len; //imm8
+      len= 3;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw2,12,len));bitpos+=len; //imm3
+      len= 1;ins.imm=writeField(ins.imm,bitpos,len,BitFiddle.parse(hw1,10,len));bitpos+=len; //i
+      if(ins.Rd==13 || ins.Rd==15) {ins.op=UNPREDICTABLE; return true;}
+      return true;
+    }
+  }, */
+  //DecodeLine boilerplate
   UNDEFINEDT1("1111/1111/1111/1111") {
     @Override public boolean decode(int IR, DecodedInstruction ins) {
       return false;
@@ -1288,15 +1350,20 @@ public enum Thumb2DecodeLine implements DecodeLine {
   };
   private int moneBits, mzeroBits;
   private String bitpattern;
-  public final Operation mop;
-  public int oneBits()  {return moneBits;};
-  public int zeroBits() {return mzeroBits;};
+  private final Operation mop;
+  private Map<String,int[]> fieldMap=new HashMap<String,int[]>();
+  @Override public int oneBits()  {return moneBits;};
+  @Override public int zeroBits() {return mzeroBits;};
+  @Override public Map<String,int[]> getFieldMap() {return fieldMap;};
+  @Override public String bitPattern() {return bitpattern;};
+  @Override public void setOneBits(int LoneBits)  {moneBits=LoneBits;};
+  @Override public void setZeroBits(int LzeroBits)  {mzeroBits=LzeroBits;};
   public Operation op() {return mop;};
   private Thumb2DecodeLine(String Lbitpattern) {
     bitpattern=Lbitpattern;
     int[] masks=DecodeLine.interpretBitPattern(bitpattern);
     moneBits =masks[1];
     mzeroBits=masks[0];
-    mop=Operation.valueOf(toString().substring(0,toString().length()-2));
+    mop=IntegerOperation.valueOf(toString().substring(0,toString().length()-2));
   }
 }
