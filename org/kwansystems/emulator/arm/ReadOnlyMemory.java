@@ -6,12 +6,27 @@ import java.io.IOException;
 public class ReadOnlyMemory implements MemoryMappedDevice {
   private byte mem[];
   protected int base;
-  public ReadOnlyMemory(int Lbase, int size) {
+  protected final String name;
+  public String getName() {return name;}
+  public final void dump(int start, int len) {
+    for(int i=0;i<len;i+=16) {
+      System.out.printf("%08x:", base+start+i);
+      for(int j=0;j<4;j++) {
+        System.out.printf(" %08x",peek(start+i+j*4,4));
+      }
+      System.out.println();
+    }
+  }
+  public final void dump() {
+    dump(0,mem.length);
+  }
+  public ReadOnlyMemory(String Lname, int Lbase, int size) {
     base=Lbase;
     mem=new byte[size];
+    name=Lname;
   }
-  public ReadOnlyMemory(int Lbase, int size, String image) throws IOException {
-    this(Lbase,size);
+  public ReadOnlyMemory(String Lname, int Lbase, int size, String image) throws IOException {
+    this(Lname,Lbase,size);
     loadBin(image);
   }
   @Override
@@ -73,4 +88,8 @@ public class ReadOnlyMemory implements MemoryMappedDevice {
   protected int pclk;
   @Override
   public void tick(int Lpclk) {pclk=Lpclk;}
+  @Override
+  public int compareTo(MemoryMappedDevice that) {
+    return base-that.getBase();
+  }
 }

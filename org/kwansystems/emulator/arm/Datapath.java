@@ -1,7 +1,12 @@
 package org.kwansystems.emulator.arm;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.kwansystems.emulator.arm.DecodedInstruction.SetFlags;
 
@@ -9,10 +14,6 @@ import static org.kwansystems.emulator.arm.ConditionCode.*;
 import static org.kwansystems.emulator.arm.BitFiddle.*;
 
 public class Datapath {
-  ArrayList<MemoryMappedDevice> devices=new ArrayList<MemoryMappedDevice>();
-  public void addDevice(MemoryMappedDevice dev) {
-    devices.add(dev);
-  }
   public static int swapEndian(int val) {
     return (((val & 0x000000FF) << 24) & 0xFF000000) |
            (((val & 0x0000FF00) <<  8) & 0x00FF0000) |
@@ -25,15 +26,14 @@ public class Datapath {
     ins=null;
     insDataValid=false;
   }
-  //Pipeline control state
-  public boolean flush=false;
-  //Pipeline state
-  DecodedInstruction ins=null;
-  int insData=0;
-  boolean insDataValid=false;
-  //Program-visible state
+  /** General Purpose Registers. r[13] is the stack pointer, r[14] is the link register, and r[15] is the program counter */
   public int r[]=new int[16];
-  public int APSR;
+  /** Application Program Status Register */
+  public int APSR; 
+  public static final int ZPos=30;
+  public static final int CPos=29;
+  public static final int NPos=31;
+  public static final int VPos=28;
   public boolean APSR_C() {return parseBit(APSR,CPos);};
   public void APSR_setC(boolean C) {APSR=setBit(APSR,CPos,C);}
   public void APSR_setC(int C) {APSR_setC(C!=0);};
@@ -46,8 +46,117 @@ public class Datapath {
   public boolean APSR_Z() {return parseBit(APSR,ZPos);};
   public void APSR_setZ(boolean Z) {APSR=setBit(APSR,ZPos,Z);}
   public void APSR_setZ(int Z) {APSR_setZ(Z!=0);};
+  /** Interrupt Program Status Register */
+  public int IPSR;
+  /** Current processor mode, doesn't seem to have a slot in any other application or system registers. */
+  public enum Mode {THREAD,HANDLER};
+  public Mode currentMode=Mode.THREAD;
+  /** CONTROL register, which holds execution privilege (privileged or unprivileged) and the stack to be used (thread or handler) */
+  public int CONTROL;
+  public static final int nPRIV=0;
+  public static final int SPSEL=1;
+  public int CPACR;
+  /** Configurable Fault Status Register */
+  public int CFSR;
+  public static final int UNDEFINSTR=0+16;
+  public static final int INVSTATE  =1+16;
+  public static final int INVPC     =2+16;
+  public static final int NOCP      =3+16;
+  public static final int UNALIGNED =8+16;
+  public static final int DIVBYZERO =9+16;
+
+  // Pipeline stuff
+  protected Decode decode;
+  public boolean flush=false;
+  DecodedInstruction ins=null;
+  int insData=0;
+  boolean insDataValid=false;
   public boolean inIT=false;
-  public int cycles=0; //Number of cycles since reset
+  // State which is useful to drive debug information
+  /** Number of cycles since reset */
+  public int cycles=0; 
+  public void cycle() {
+    System.out.printf("== Cycle %d ==\n", cycles);
+    //Update peripherals
+    for(MemoryMappedDevice i:devices) {
+      i.tick(cycles);
+    }
+    // execute
+    if(ins!=null) {
+      System.out.printf("=== Execute pc=%08x %s ===\n",ins.pc,ins.op.toString());
+      if(disasmAddrLines.containsKey(ins.pc)) {
+        System.out.println(" "+disasmAddrLines.get(ins.pc));
+      }
+      if(cycleBreakpointEnabled && cycles>=cycleBreakpoint) {
+        cycleBreakpointEnabled=false;
+        singleStep=true;
+        System.out.printf("Cycle breakpoint at cycle %d\n",cycles);
+      } 
+      if(cycleHaltpointEnabled && cycles>=cycleHaltpoint) {
+        System.out.printf("Cycle haltpoint at cycle %d\n",cycles);
+        System.exit(0);
+      } 
+      if(addressBreakpointEnabled && ins!=null && ins.pc==addressBreakpoint) {
+        addressBreakpointEnabled=false;
+        singleStep=true;
+        System.out.printf("Address breakpoint at %08x\n",addressBreakpoint);
+      }
+      ins.execute(this);
+      if(singleStep) {
+        for(int i=0;i<16;i+=4) {
+          for(int j=0;j<4;j++) {
+            System.out.printf("r%02d: 0x%08x   ",i+j,r[i+j]);
+          }
+          System.out.println();
+        }
+        for(int i=0;i<5;i++) {
+          for(int j=0;j<15;j++) {
+            System.out.printf("%02x", peek(0x1000016e+i*15+j,1));
+          }
+          System.out.print(" ");
+          for(int j=0;j<15;j++) {
+            char c=(char)peek(0x1000016e+i*15+j,1);
+            System.out.printf("%c", c>=' '&&c<='~'?c:'.');
+          }
+          System.out.println();
+        }
+        for(int j=0;j<15;j++) {
+          System.out.printf("%02x", peek(0x10000128+j,1));
+        }
+        System.out.print(" ");
+        for(int j=0;j<15;j++) {
+          char c=(char)peek(0x10000128+j,1);
+          System.out.printf("%c", c>=' '&&c<='~'?c:'.');
+        }
+        System.out.println();
+        System.out.println("Single step");
+      }
+      if(ins!=null && ins.op!=IntegerOperation.IT) shiftIT();
+    }
+    if(flush) {
+      decode.flushPipeline();
+    }
+    flush=false;
+    // decode
+    if(insDataValid) {
+      System.out.println("=== Decode ===");
+      ins=decode.decode(insData,r[15]);
+    }
+    // fetch
+    System.out.println("=== Fetch ===");
+    insData=readMem2(r[15]);
+    insDataValid=true;
+    r[15]+=2;
+    cycles++;
+  }
+
+  // Memory Interface - All memory is treated by specific objects, which are mapped to particular memory addresses
+  // during the initialization of the emulator. We are emulating an LPC4078, but in principle you could emulate any
+  // memory-mapped set of peripherals this way.
+  public SortedSet<MemoryMappedDevice> devices=new TreeSet<MemoryMappedDevice>();
+  public void addDevice(MemoryMappedDevice dev) {
+    devices.add(dev);
+  }
   public int peek(int address, int bytes) { 
     for(MemoryMappedDevice i:devices) {
       if(address>=i.getBase() && address<i.getBase()+i.getSize()) {
@@ -101,6 +210,7 @@ public class Datapath {
     }
     return false; //Above case statement is exhaustive, but compiler doesn't see it that way.
   }
+  // If-then block functions, not used by pseudocode
   private int getIT() {
     return parse(APSR,25,2) | (parse(APSR,10,6)<<2);
   }
@@ -208,6 +318,9 @@ public class Datapath {
   }
   public ResultWithCarry ThumbExpandImmWithC(int imm) {
     return ThumbExpandImm(imm,APSR_C());
+  }
+  public boolean CurrentModeIsPrivileged() {
+    return(currentMode==Mode.HANDLER || !parseBit(CONTROL,nPRIV)); 
   }
   //Pseudocode functions which don't rely on datapath state, but are used in execute stage
   public static ResultWithCarry ThumbExpandImm(int imm, boolean b) {
@@ -350,5 +463,24 @@ public class Datapath {
   }
   public static void main(String[] args) {
     AddWithCarry(8,~8,true);
+  }
+  //Debugging stuff
+  protected Map<Integer,String> disasmAddrLines = new HashMap<Integer,String>();
+  protected Pattern P = Pattern.compile("^\\s*([0-9A-Fa-f]{1,8}):.*$");
+  public boolean cycleBreakpointEnabled=false;
+  public int cycleBreakpoint=0;
+  public boolean cycleHaltpointEnabled=false;
+  public int cycleHaltpoint=0;
+  public boolean addressBreakpointEnabled=false;
+  public int addressBreakpoint=0;
+  public boolean singleStep=false;
+  public void loadDisasm(String path, String filename) throws IOException {
+    List<String> disasmLines=Files.readAllLines(Paths.get(path,filename),Charset.forName("UTF-8"));
+    for(String line:disasmLines) {
+      Matcher m=P.matcher(line);
+      if(m.matches()) {
+        disasmAddrLines.put(Integer.parseInt(m.group(1),16), line);
+      }
+    }
   }
 }

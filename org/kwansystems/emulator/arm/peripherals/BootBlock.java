@@ -2,6 +2,7 @@ package org.kwansystems.emulator.arm.peripherals;
 
 import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
+import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
@@ -50,8 +51,8 @@ public class BootBlock extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public BootBlock() {
-    super("Boot Block",0x00100000,0x10000);
+  public BootBlock(Datapath Ldatapath) {
+    super(Ldatapath,"Boot Block",0x00100000,0x600);
     setupRegs(Registers.values());
   }
   @Override

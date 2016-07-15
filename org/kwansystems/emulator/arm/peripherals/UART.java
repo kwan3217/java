@@ -4,6 +4,7 @@ import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
 import java.io.PrintWriter;
 
+import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
@@ -49,7 +50,6 @@ public class UART extends Peripheral {
       ouf.flush();
     }
   }
-  private final int port;
   public enum Registers implements DeviceRegister {
     UDLL     (RW,0x000) { //This also implements URBR (on read)/UTHR (on write)
       @Override
@@ -135,9 +135,8 @@ public class UART extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public UART(int Lport, int base) {
-    super(String.format("UART%d", Lport),base,0x4000);
-    port=Lport;
+  public UART(Datapath Ldatapath, int Lport, int base) {
+    super(Ldatapath, String.format("UART%d", Lport),base,0x40);
     setupRegs(Registers.values());
     outData=new UARTOutData[0];
   }

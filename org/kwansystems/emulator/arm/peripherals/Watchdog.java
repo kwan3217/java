@@ -2,6 +2,7 @@ package org.kwansystems.emulator.arm.peripherals;
 
 import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
+import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
@@ -47,8 +48,8 @@ public class Watchdog extends Peripheral {
     reset(inReset,Registers.values());
   }
   //End boilerplate
-  public Watchdog() {
-    super("Watchdog",0x40000000,0x4000);
+  public Watchdog(Datapath Ldatapath) {
+    super(Ldatapath,"Watchdog",0x40000000,0x20);
     setupRegs(Registers.values());
   }
 }

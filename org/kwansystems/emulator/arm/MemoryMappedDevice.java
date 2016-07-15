@@ -1,6 +1,6 @@
 package org.kwansystems.emulator.arm;
 
-public interface MemoryMappedDevice {
+public interface MemoryMappedDevice extends Comparable<MemoryMappedDevice> {
   public int read(int rel_addr, int bytes);
   public void write(int rel_addr, int bytes, int value);
   public int getSize();
@@ -12,4 +12,6 @@ public interface MemoryMappedDevice {
    */
   public void tick(int Lpclk);
   public int peek(int i, int bytes); 
+  public void dump();
+  public String getName();
 }

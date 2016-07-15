@@ -1,8 +1,8 @@
 package org.kwansystems.emulator.arm;
 
 public class RandomAccessMemory extends ReadOnlyMemory {
-  public RandomAccessMemory(int Lbase, int size) {
-    super(Lbase,size);
+  public RandomAccessMemory(String Lname, int Lbase, int size) {
+    super(Lname,Lbase,size);
   }
   @Override
   public void write(int rel_addr, int bytes, int value) {

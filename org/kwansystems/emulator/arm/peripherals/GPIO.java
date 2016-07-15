@@ -6,7 +6,6 @@ import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
-import org.kwansystems.emulator.arm.peripherals.UART.Registers;
 
 public class GPIO extends Peripheral {
   private static int[][] inputData;
@@ -129,8 +128,8 @@ public class GPIO extends Peripheral {
   public void reset(boolean inReset) {
     reset(inReset,Registers.values());
   }
-  public GPIO(int[][] LinputData) {
-    super("GPIO",0x20098000,0x4000);
+  public GPIO(Datapath Ldatapath, int[][] LinputData) {
+    super(Ldatapath,"GPIO",0x20098000,0xC0);
     inputData=LinputData;
     setupRegs(Registers.values());
   }

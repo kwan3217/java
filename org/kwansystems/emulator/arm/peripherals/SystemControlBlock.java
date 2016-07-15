@@ -2,8 +2,8 @@ package org.kwansystems.emulator.arm.peripherals;
 
 import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
+import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
-import org.kwansystems.emulator.arm.Emulator;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
 
@@ -72,7 +72,7 @@ public class SystemControlBlock extends Peripheral {
 
     //Register boilerplate
     public int ofs;
-    public int val, resetVal;
+    public int resetVal;
     public RegisterDirection dir;
     private Registers(RegisterDirection Ldir,int Lofs,int LresetVal) {ofs=Lofs;dir=Ldir;resetVal=LresetVal;}
     private Registers(RegisterDirection Ldir,int Lofs) {this(Ldir,Lofs,0);}
@@ -96,8 +96,8 @@ public class SystemControlBlock extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public SystemControlBlock(Peripheral[] LresetArray0) {
-    super("SystemControlBlock",0x400FC000);
+  public SystemControlBlock(Datapath Ldatapath, Peripheral[] LresetArray0) {
+    super(Ldatapath, "SystemControlBlock",0x400FC000,0x400);
     resetArray0=LresetArray0;
     setupRegs(Registers.values());
   }

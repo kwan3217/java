@@ -288,8 +288,8 @@ public class PinConnect extends Peripheral {
   public void reset(boolean inReset) {
     reset(inReset,Registers.values());
   }
-  public PinConnect() {
-    super("Pin Connect",0x4002C000,0x4000);
+  public PinConnect(Datapath Ldatapath) {
+    super(Ldatapath,"Pin Connect",0x4002C000,0x300);
     setupRegs(Registers.values());
     reset(false); //Bring the part out of reset
   }

@@ -4,14 +4,15 @@ import java.util.*;
 import java.io.*;
 
 public class Peripheral extends RandomAccessMemory {
-  String name;
   public static PrintWriter ouf; 
-  public Peripheral(String Lname, int Lbase, int size) {
-    super(Lbase, size);
-    name=Lname;
+  protected final Datapath datapath;
+  public Datapath getDatapath() {return datapath;}
+  public Peripheral(Datapath Ldatapath, String Lname, int Lbase, int size) {
+    super(Lname, Lbase, size);
+    datapath=Ldatapath;
   }
-  public Peripheral(String Lname, int Lbase) {
-    this(Lname,Lbase,0x4000); //Default address space size
+  public Peripheral(Datapath Ldatapath, String Lname, int Lbase) {
+    this(Ldatapath, Lname,Lbase,0x4000); //Default address space size
   }
   protected Map<Integer,DeviceRegister> readregs=new HashMap<Integer,DeviceRegister>();
   protected Map<Integer,DeviceRegister> writeregs=new HashMap<Integer,DeviceRegister>();

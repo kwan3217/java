@@ -2,6 +2,7 @@ package org.kwansystems.emulator.arm.peripherals;
 
 import static org.kwansystems.emulator.arm.RegisterDirection.*;
 
+import org.kwansystems.emulator.arm.Datapath;
 import org.kwansystems.emulator.arm.DeviceRegister;
 import org.kwansystems.emulator.arm.Peripheral;
 import org.kwansystems.emulator.arm.RegisterDirection;
@@ -37,8 +38,8 @@ public class LockBlock extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public LockBlock() {
-    super("LockBlock",0x00200000,0x10000);
+  public LockBlock(Datapath Ldatapath) {
+    super(Ldatapath,"LockBlock",0x00200000,0x20);
     setupRegs(Registers.values());
   }
   @Override

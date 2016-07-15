@@ -20,14 +20,10 @@ public enum ConditionCode {
   AL {@Override public boolean shouldExecute(boolean Z, boolean C, boolean N, boolean V) {return true;};},
   UNDEF,
   Thumb; //In this case, the instruction doesn't specify a condition code, so use the ambient IT block. This is the most common case for Thumb instructions.
-  public static final int ZPos=30;
-  public static final int CPos=29;
-  public static final int NPos=31;
-  public static final int VPos=28;
   public boolean shouldExecute(boolean Z, boolean C, boolean N, boolean V) {return false;};
   public boolean shouldExecute(int PSR) {
-    boolean result=shouldExecute(parseBit(PSR,ZPos),parseBit(PSR,CPos),parseBit(PSR,NPos),parseBit(PSR,VPos));
-    System.out.printf("Checking condition %s with Z=%d, C=%d, N=%d, V=%d, result is should%s execute\n",toString(), parse(PSR,ZPos,1),parse(PSR,CPos,1),parse(PSR,NPos,1),parse(PSR,VPos,1),result?"":" not");
+    boolean result=shouldExecute(parseBit(PSR,Datapath.ZPos),parseBit(PSR,Datapath.CPos),parseBit(PSR,Datapath.NPos),parseBit(PSR,Datapath.VPos));
+    System.out.printf("Checking condition %s with Z=%d, C=%d, N=%d, V=%d, result is should%s execute\n",toString(), parse(PSR,Datapath.ZPos,1),parse(PSR,Datapath.CPos,1),parse(PSR,Datapath.NPos,1),parse(PSR,Datapath.VPos,1),result?"":" not");
     return result;
   };
   public static final ConditionCode[] enumValues=ConditionCode.values();

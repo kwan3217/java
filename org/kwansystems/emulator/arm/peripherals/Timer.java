@@ -78,8 +78,8 @@ public class Timer extends Peripheral {
     @Override
     public RegisterDirection getDir() {return dir;};
   }
-  public Timer(int Lport, int base) {
-    super(String.format("Timer%d", Lport),base,0x4000);
+  public Timer(Datapath Ldatapath, int Lport, int base) {
+    super(Ldatapath, String.format("Timer%d", Lport),base,0x80);
     port=Lport;
     setupRegs(Registers.values());
   }
