@@ -37,19 +37,33 @@ public enum TimeScale {
       return -DeltaGPS2(Tgps);
     }
   },
-  JST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+9*3600*M;}},  //Japan Stadard time, 9 hours ahead of UTC (year round)
-  PHT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+8*3600*M;}},  //Philippine Time, 8 hours ahead of UTC (year round)
-  CET() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+1*3600*M;}},  //Central European Time, 1 hour ahead of UTC (winter)
-  CEST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+2*3600*M;}}, //Central European Summer Time, 2 hours ahead of UTC (summer)
-  MSK() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+3*3600*M;}},  //Moscow Standard Time, 3 hours ahead of UTC (winter)
-  MSD() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+4*3600*M;}},  //Moscow Summer Time, 4 hours ahead of UTC (summer)
-  EDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-4*3600*M;}},  //Eastern daylight time, 4 hours behind UTC (summer)
+  /** Japan Stadard time, 9 hours ahead of UTC (year round) */
+  JST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+9*3600*M;}},  
+  /** Philippine Time, 8 hours ahead of UTC (year round) */
+  PHT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+8*3600*M;}},  
+  /** Central European Time, 1 hour ahead of UTC (winter) */
+  CET() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+1*3600*M;}},  
+  /** Central European Summer Time, 2 hours ahead of UTC (summer) */
+  CEST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+2*3600*M;}}, 
+  /** Moscow Standard Time, 3 hours ahead of UTC (winter) */
+  MSK() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+3*3600*M;}},  
+  /** Moscow Summer Time, 4 hours ahead of UTC (summer) */
+  MSD() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)+4*3600*M;}},  
+  /** Eastern daylight time, 4 hours behind UTC (summer) */
+  EDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-4*3600*M;}},  
+  /** Eastern standard time, 5 hours behind UTC (winter) */
   EST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-5*3600*M;}},
+  /** Central daylight time, 5 hours behind UTC (summer) */
   CDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-5*3600*M;}},
+  /** Central standard time, 6 hours behind UTC (winter) */
   CST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-6*3600*M;}},
+  /** Mountain daylight time, 6 hours behind UTC (summer) */
   MDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-6*3600*M;}},
+  /** Mountain standard time, 7 hours behind UTC (winter) */
   MST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-7*3600*M;}},
+  /** Pacific daylight time, 7 hours behind UTC (summer) */
   PDT() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-7*3600*M;}},
+  /** Pacific standard time, 8 hours behind UTC (winter) */
   PST() {public long Offset(long Tgps) {return -DeltaGPS2(Tgps)-8*3600*M;}},
   /**
    * Global Positioning System time scale. Atomic time scale with no leap seconds, used by the GPS system. The GPS system clock 
@@ -237,7 +251,9 @@ public enum TimeScale {
     {2451179.5,32.0      ,  41317.0,  0.0     },  //1 Jan 1999
     {2453736.5,33.0      ,  41317.0,  0.0     },  //1 Jan 2006
     {2454832.5,34.0      ,  41317.0,  0.0     },  //1 Jan 2009
-    {2456109.5,35.0      ,  41317.0,  0.0     }   //1 Jul 2012
+    {2456109.5,35.0      ,  41317.0,  0.0     },  //1 Jul 2012
+    {2457204.5,36.0      ,  41317.0,  0.0     },  //1 Jul 2015
+    {2457754.5,37.0      ,  41317.0,  0.0     }   //1 Jan 2017
   };
   public static long DeltaAT(long Tgps) {
     double JD=TimeEpoch.GPS2JD(Tgps);
