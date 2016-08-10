@@ -8,8 +8,9 @@ import static java.lang.Math.*;
 
 public abstract class Autopilot {
   protected PEGVehicleModel veh;
+  /** Mission Elapsed Time (s) */
   @VariableDesc(desc="Mission Elapsed Time",units="s",Major=true,Minor=true)
-  protected double met;
+  protected double met; 
   @VariableDesc(desc="Initial MET",units="s",Major=true,Minor=false)
   protected double t0;
   @VariableDesc(desc="Minor cycle count",units="minor cycles",Major=false,Minor=true)
