@@ -1,7 +1,8 @@
-package org.kwansystems.pov.texture;
+package org.kwansystems.image.dxt;
+
+import static org.kwansystems.image.dxt.DirectDrawSurface.*;
 
 import java.io.*;
-import static org.kwansystems.pov.texture.DirectDrawSurface.*;
 
 public class DXT1 extends DXT {
   int[][] c;

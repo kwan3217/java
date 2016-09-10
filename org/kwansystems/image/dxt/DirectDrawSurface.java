@@ -1,7 +1,8 @@
-package org.kwansystems.pov.texture;
+package org.kwansystems.image.dxt;
 
 import java.io.*;
 
+import org.kwansystems.image.png.PngOutputStream;
 import org.kwansystems.pov.*;
 import static org.kwansystems.tools.Endian.*;
 

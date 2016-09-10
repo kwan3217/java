@@ -2,7 +2,7 @@ package org.kwansystems.pov;
 
 import java.io.*;
 
-import org.kwansystems.pov.texture.DirectDrawSurface;
+import org.kwansystems.image.dxt.DirectDrawSurface;
 import org.kwansystems.tools.vector.*;
 
 public class OrbiterMsh {

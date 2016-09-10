@@ -1,4 +1,4 @@
-package org.kwansystems.pov;
+package org.kwansystems.image.png;
 
 import java.util.zip.*;
 import java.io.*;

@@ -1,6 +1,9 @@
 package org.kwansystems.pov;
 
 import java.io.*;
+
+import org.kwansystems.image.png.PngOutputStream;
+
 import static org.kwansystems.pov.BlueMarbleTile.*;
 
 /**Breaks up a BMNG world_big file into a heirarchy of tiles.

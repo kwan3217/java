@@ -1,8 +1,8 @@
-package org.kwansystems.pov.texture;
+package org.kwansystems.image.dxt;
+
+import static org.kwansystems.image.dxt.DirectDrawSurface.*;
 
 import java.io.*;
-
-import static org.kwansystems.pov.texture.DirectDrawSurface.*;
 
 public class DXT45 extends DXT1 {
   public DXT45(InputStream Inf, int Lformat) throws IOException {

@@ -1,4 +1,4 @@
-package org.kwansystems.pov.texture;
+package org.kwansystems.image.dxt;
 
 import java.io.*;
 
