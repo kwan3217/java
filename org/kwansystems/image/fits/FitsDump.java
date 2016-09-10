@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.kwansystems.fits;
+package org.kwansystems.image.fits;
 
 import java.io.*;
 /**
